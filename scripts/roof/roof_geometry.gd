@@ -1,23 +1,23 @@
 class_name RoofGeometry
 extends RefCounted
 
-## Shared geometry helpers for roof generation.
-##
-## These were extracted verbatim from the former monolithic
-## OSMBuildingBuilder so that each roof-shape family (linear-profile,
-## conic-profile, hip/half-hip, skillion/sawtooth) can live in its own file
-## while sharing one source of truth for SurfaceTool setup, triangle/quad
-## emission, ridge-axis derivation, and profile sampling.
-##
-## All methods are `static`: roof geometry is stateless, mirroring the
-## PolygonUtils convention. Coordinates are in building-local space (y=0 at the
-## footprint); the caller raises the finished mesh onto the terrain.
+
+
+
+
+
+
+
+
+
+
+
 
 const BUILDING_Y := 0.0
 
-# ─── SurfaceTool / mesh helpers ──────────────────────────────────────────────
 
-## Begin a new triangle-primitive SurfaceTool with a flat-colored material.
+
+
 static func new_st(color: Color) -> SurfaceTool:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -26,47 +26,47 @@ static func new_st(color: Color) -> SurfaceTool:
 	st.set_material(mat)
 	return st
 
-## Add a triangle with an auto-computed normal (delegates to PolygonUtils).
+
 static func add_tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 	PolygonUtils.add_tri(st, a, b, c)
 
-## Add a quad as two triangles sharing the a→c diagonal.
+
 static func add_quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
 	add_tri(st, a, b, c)
 	add_tri(st, a, c, d)
 
-## Commit a SurfaceTool into a named MeshInstance3D.
+
 static func make_mesh(st: SurfaceTool, name_str: String) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.name = name_str
 	mi.mesh = BuildingSurfaceUV.commit(st, mi)
 	return mi
 
-# ─── Ridge axis helpers ──────────────────────────────────────────────────────
 
-## Resolve the ridge axis direction (in XZ) for a roof.
-## roof:direction (compass bearing 0-360) takes priority over roof:orientation;
-## otherwise the ridge follows the polygon's longest edge, rotated 90° when the
-## orientation is "across".
+
+
+
+
+
 static func get_ridge_dir(points: PackedVector3Array, orientation: String, roof_direction: float = -1.0) -> Vector3:
 	if roof_direction >= 0.0:
 		var d_rad := deg_to_rad(roof_direction)
-		# roof:direction is the compass bearing the roof faces (perpendicular to ridge).
-		# Compass: 0=north(-Z), 90=east(+X), 180=south(+Z), 270=west(-X).
-		# Ridge is perpendicular to the facing direction, rotated 90° CW in XZ.
+		
+		
+		
 		return Vector3(cos(d_rad), 0.0, sin(d_rad)).normalized()
 	var longest := PolygonUtils.polygon_longest_edge_dir(points)
 	if orientation == "across":
 		return Vector3(-longest.z, 0.0, longest.x)
 	return longest
 
-## The in-plane direction perpendicular to the ridge (building width axis).
+
 static func get_perp_dir(ridge_dir: Vector3) -> Vector3:
 	return Vector3(-ridge_dir.z, 0.0, ridge_dir.x)
 
-## Compute eave/ridge geometry for rectangular-ish polygons.
-## Returns a dictionary with ridge_dir, perp_dir, centroid, min/max projections
-## along both axes, ridge_start/ridge_end, ridge_y and base_y.
+
+
+
 static func compute_ridge_geometry(points: PackedVector3Array, base_y: float, roof_h: float,
 		orientation: String, roof_direction: float = -1.0) -> Dictionary:
 	var ridge_dir := get_ridge_dir(points, orientation, roof_direction)
@@ -106,10 +106,10 @@ static func compute_ridge_geometry(points: PackedVector3Array, base_y: float, ro
 		"base_y": base_y,
 	}
 
-# ─── Profile sampling / subdivision ──────────────────────────────────────────
 
-## Sample a piecewise-linear profile at position x (0.0 to 1.0).
-## Profile is an array of Vector2(x_pos, height_fraction) sorted by x_pos.
+
+
+
 static func sample_profile(profile: Array[Vector2], x: float) -> float:
 	if profile.is_empty():
 		return 0.0
@@ -121,17 +121,17 @@ static func sample_profile(profile: Array[Vector2], x: float) -> float:
 			return lerpf(profile[i].y, profile[i + 1].y, t)
 	return profile[profile.size() - 1].y
 
-## Subdivide polygon edges where they cross profile breakpoint lines.
-## For a gabled roof with profile [0:0, 0.5:1, 1:0], the breakpoint at x=0.5
-## is the ridge line. Any edge crossing that line gets a new vertex inserted
-## at the crossing point, so wall patches can be built edge-by-edge.
+
+
+
+
 static func subdivide_at_profile_breaks(points: PackedVector3Array, centroid: Vector3,
 		perp_dir: Vector3, min_perp: float, perp_span: float,
 		break_xs: Array[float]) -> PackedVector3Array:
 	if break_xs.is_empty() or perp_span < 0.001:
 		return points
 
-	# Convert break x-values [0,1] to perpendicular world-space positions
+	
 	var break_perps: Array[float] = []
 	for bx: float in break_xs:
 		break_perps.append(min_perp + bx * perp_span)
@@ -146,13 +146,13 @@ static func subdivide_at_profile_breaks(points: PackedVector3Array, centroid: Ve
 		var perp0 := PolygonUtils.project_xz(p0, centroid, perp_dir)
 		var perp1 := PolygonUtils.project_xz(p1, centroid, perp_dir)
 
-		# Collect all breakpoints that lie strictly between perp0 and perp1
+		
 		var crossings: Array[float] = []
 		for bp: float in break_perps:
 			if (perp0 < bp - 0.001 and bp + 0.001 < perp1) or (perp1 < bp - 0.001 and bp + 0.001 < perp0):
 				crossings.append(bp)
 
-		# Sort crossings by distance from p0
+		
 		if crossings.size() > 1:
 			if perp0 > perp1:
 				crossings.sort()
@@ -160,14 +160,14 @@ static func subdivide_at_profile_breaks(points: PackedVector3Array, centroid: Ve
 			else:
 				crossings.sort()
 
-		# Insert interpolated vertices at each crossing
+		
 		for bp: float in crossings:
 			var t := (bp - perp0) / (perp1 - perp0)
 			var px := p0.x + (p1.x - p0.x) * t
 			var pz := p0.z + (p1.z - p0.z) * t
 			result.append(Vector3(px, 0.0, pz))
 
-	# Add closing vertex
+	
 	if n > 0:
 		result.append(points[n - 1])
 	return result

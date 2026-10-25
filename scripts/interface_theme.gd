@@ -19,8 +19,8 @@ static func panel(fill: Color, border: Color = Color("344448"), padding: float =
 	style.content_margin_bottom = padding
 	return style
 
-## Turn a button into the big accent call to action (dark ink on lime), the
-## style of "BACK TO THE ROAD" in the pause menu.
+
+
 static func style_primary(button: Button, font_size: int = 26) -> void:
 	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, 56)
 	button.add_theme_font_override("font", DISPLAY)
@@ -35,7 +35,7 @@ static func style_primary(button: Button, font_size: int = 26) -> void:
 		button.add_theme_color_override(state, INK)
 
 
-## A plain label in the interface palette; `display` picks the condensed face.
+
 static func label(text: String, size: int, color: Color = PAPER, display: bool = false) -> Label:
 	var l := Label.new()
 	l.text = text

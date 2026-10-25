@@ -1,14 +1,14 @@
 class_name OSMParser
 extends RefCounted
 
-## Parses .osm XML files into structured data (nodes, ways, relations).
+
 
 class OSMNode:
 	var id: int
 	var lat: float
 	var lon: float
 	var tags: Dictionary = {}
-	var local_pos: Vector3 = Vector3.ZERO  # computed after parsing
+	var local_pos: Vector3 = Vector3.ZERO  
 
 class OSMWay:
 	var id: int
@@ -17,25 +17,25 @@ class OSMWay:
 
 class OSMRelation:
 	var id: int
-	var members: Array[Dictionary] = []  # {type, ref, role}
+	var members: Array[Dictionary] = []  
 	var tags: Dictionary = {}
 
 class OSMData:
-	var nodes: Dictionary = {}       # id -> OSMNode
-	var ways: Dictionary = {}        # id -> OSMWay
-	var relations: Dictionary = {}   # id -> OSMRelation
-	var bounds: Rect2 = Rect2()      # lat/lon bounds
+	var nodes: Dictionary = {}       
+	var ways: Dictionary = {}        
+	var relations: Dictionary = {}   
+	var bounds: Rect2 = Rect2()      
 	var center_lat: float = 0.0
 	var center_lon: float = 0.0
-	var height_provider: HeightProvider = null  # null or flat when no DEM loaded
+	var height_provider: HeightProvider = null  
 	var building_neighborhood: RefCounted = null
 
-## Parse an .osm file into structured data.
-##
-## When apply_elevation is true, a HeightProvider is loaded from the default
-## DEM heightmap (data/map.dem.png + data/map.dem.json) and every node's
-## local_pos.y is lifted to its terrain elevation. When no DEM is present, or
-## apply_elevation is false, the world stays flat at y=0.
+
+
+
+
+
+
 static func parse_file(path: String, apply_elevation: bool = true) -> OSMData:
 	var data := OSMData.new()
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -125,7 +125,7 @@ static func parse_file(path: String, apply_elevation: bool = true) -> OSMData:
 				data.relations[current_relation.id] = current_relation
 				current_relation = null
 
-	# If no bounds tag, compute from nodes
+	
 	if data.bounds.size == Vector2.ZERO and data.nodes.size() > 0:
 		var min_lat := INF
 		var max_lat := -INF
@@ -140,26 +140,26 @@ static func parse_file(path: String, apply_elevation: bool = true) -> OSMData:
 		data.center_lat = (min_lat + max_lat) / 2.0
 		data.center_lon = (min_lon + max_lon) / 2.0
 
-	# Compute local positions for all nodes
+	
 	for node: OSMNode in data.nodes.values():
 		node.local_pos = _latlon_to_local(node.lat, node.lon, data.center_lat, data.center_lon)
 
-	# Lift nodes onto the terrain when a DEM heightmap is available.
+	
 	if apply_elevation:
 		data.height_provider = HeightProvider.new()
 		if data.height_provider.load_from_files(data.center_lat, data.center_lon):
 			for node: OSMNode in data.nodes.values():
-				# Sample by lat/lon so elevation is independent of any rounding
-				# in the local-meter projection.
+				
+				
 				node.local_pos.y = data.height_provider.sample_latlon(node.lat, node.lon)
 
 	return data
 
-## Convert lat/lon to local meter-based coordinates (Y-up, X=east, Z=south)
+
 static func _latlon_to_local(lat: float, lon: float, ref_lat: float, ref_lon: float) -> Vector3:
 	var lat_rad := deg_to_rad(ref_lat)
 	var meters_per_deg_lat := 111132.0
 	var meters_per_deg_lon := 111132.0 * cos(lat_rad)
 	var x := (lon - ref_lon) * meters_per_deg_lon
-	var z := -(lat - ref_lat) * meters_per_deg_lat  # negative because Z goes south in Godot
+	var z := -(lat - ref_lat) * meters_per_deg_lat  
 	return Vector3(x, 0.0, z)

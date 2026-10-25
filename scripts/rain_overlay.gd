@@ -1,8 +1,8 @@
 extends Control
 
-## Lightweight screen-space rain layer. The 3D emitter handles depth and nearby
-## streaks; this layer keeps rain visible across the road and horizon, including
-## lightweight web rendering where reflections are disabled.
+
+
+
 
 var _raining: bool = false
 var _time: float = 0.0

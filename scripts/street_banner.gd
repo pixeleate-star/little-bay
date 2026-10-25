@@ -1,7 +1,7 @@
 extends Control
 
-## Slides the name of the street the car has turned onto in under the HUD title,
-## e.g. "PRIMARY ROAD / N57" over "Oostdijk", then fades it out.
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 const StreetNameTrackerScript := preload("res://scripts/street_name_tracker.gd")
@@ -9,7 +9,7 @@ const StreetNameTrackerScript := preload("res://scripts/street_name_tracker.gd")
 @export var car_node_path: NodePath
 @export var traffic_manager_node_path: NodePath
 
-## Seconds between checks of the road under the car.
+
 const POLL_INTERVAL := 0.25
 const HOLD_TIME := 3.0
 
@@ -35,7 +35,7 @@ var _traffic: Node = null
 var _tracker := StreetNameTrackerScript.new()
 var _since_poll: float = 0.0
 var _tween: Tween = null
-## Authored x, which the slide-in eases back to.
+
 var _rest_x: float = 0.0
 var _detail_label: Label
 var _name_label: Label
@@ -63,15 +63,15 @@ func _process(delta: float) -> void:
 		show_street(announce, detail_for(road))
 
 
-## The name to show for a road: its name, else its route number, else "".
+
 static func display_name(road: TrafficRoadNetwork.Road) -> String:
 	if road == null:
 		return ""
 	return road.name if road.name != "" else road.ref
 
 
-## The small line above the name: road class, plus the route number when the
-## road also has a name.
+
+
 static func detail_for(road: TrafficRoadNetwork.Road) -> String:
 	var label: String = CLASS_LABELS.get(road.highway_type, "ROAD")
 	if road.name != "" and road.ref != "":
@@ -93,9 +93,9 @@ func show_street(street: String, detail: String) -> void:
 	_tween.chain().tween_property(self, "modulate:a", 0.0, 0.6).set_delay(HOLD_TIME)
 
 
-## Hide the banner and forget the current street, so it is announced afresh.
-## Main calls this as the loading screen lifts: the street the car spawned on
-## was announced unseen behind it.
+
+
+
 func reset() -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()

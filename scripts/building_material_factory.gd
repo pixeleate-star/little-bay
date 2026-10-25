@@ -1,19 +1,19 @@
 class_name BuildingMaterialFactory
 extends RefCounted
 
-## Maps resolved OSM materials to shared procedural shaders. BuildingSurfaceUV
-## supplies metre-scaled UVs and tangents before these materials are applied.
+
+
 
 const WALL_SHADER: Shader = preload("res://scripts/shaders/building_wall.gdshader")
 const ROOF_SHADER: Shader = preload("res://scripts/shaders/roof.gdshader")
 
-## Wall surface kinds (must match building_wall.gdshader's `surface_kind`).
+
 enum WallKind { SMOOTH = 0, MASONRY = 1, PANEL = 2 }
-## Roof surface kinds (must match roof.gdshader's `surface_kind`).
+
 enum RoofKind { TILES = 0, FLAT = 1, METAL = 2 }
 
-## OSM building:material → wall kind. Anything not listed falls back to SMOOTH
-## (plaster/render is the most common default and the most forgiving look).
+
+
 const WALL_KIND_BY_MATERIAL := {
 	"brick": WallKind.MASONRY,
 	"stone": WallKind.MASONRY,
@@ -32,8 +32,8 @@ const WALL_KIND_BY_MATERIAL := {
 	"wood": WallKind.SMOOTH,
 }
 
-## OSM roof:material → roof kind. Unlisted falls back to TILES (the commonest
-## pitched-roof covering; on a flat roof the rows simply read as a subtle grain).
+
+
 const ROOF_KIND_BY_MATERIAL := {
 	"roof_tiles": RoofKind.TILES,
 	"tile": RoofKind.TILES,
@@ -53,29 +53,29 @@ const ROOF_KIND_BY_MATERIAL := {
 }
 
 
-## Resolve an OSM building:material string to a wall kind. Case-insensitive and
-## whitespace-trimmed; empty / unknown → SMOOTH.
+
+
 static func wall_kind_for(material: String) -> WallKind:
 	var key := material.strip_edges().to_lower()
 	return WALL_KIND_BY_MATERIAL.get(key, WallKind.SMOOTH)
 
 
-## Resolve an OSM roof:material string to a roof kind. Empty / unknown → TILES.
+
 static func roof_kind_for(material: String) -> RoofKind:
 	var key := material.strip_edges().to_lower()
 	return ROOF_KIND_BY_MATERIAL.get(key, RoofKind.TILES)
 
 
-## Per-wall-kind weathering strength. Masonry grimes up the most (brick soaks
-## up dirt and streaks), panels the least (glass/metal self-clean in rain).
+
+
 const WALL_WEATHERING_BY_KIND := {
 	WallKind.SMOOTH: 0.32,
 	WallKind.MASONRY: 0.42,
 	WallKind.PANEL: 0.18,
 }
 
-## Per-roof-kind weathering strength. Tiles collect the most moss/fade; metal
-## the least; flat membranes sit in between.
+
+
 const ROOF_WEATHERING_BY_KIND := {
 	RoofKind.TILES: 0.5,
 	RoofKind.FLAT: 0.35,
@@ -83,18 +83,18 @@ const ROOF_WEATHERING_BY_KIND := {
 }
 
 
-## Materials are shared between every building with the same tint and kind. A
-## material of its own per building means a separate uniform set and render state
-## for each draw, which is what the renderer spends its CPU time on in a dense
-## street; sharing lets it sort and batch them. Nothing mutates a material after
-## it is handed out.
+
+
+
+
+
 static var _wall_materials: Dictionary = {}
 static var _roof_materials: Dictionary = {}
 
 
-## Build a wall ShaderMaterial tinted `color` with the given kind. The kind also
-## picks a default weathering strength (masonry grimes most, panels least) so a
-## brick terrace and a glass tower don't wear identically.
+
+
+
 static func create_wall_material(color: Color, kind: WallKind = WallKind.SMOOTH) -> ShaderMaterial:
 	var key := [color, kind]
 	if _wall_materials.has(key):
@@ -108,8 +108,8 @@ static func create_wall_material(color: Color, kind: WallKind = WallKind.SMOOTH)
 	return mat
 
 
-## Build a roof ShaderMaterial tinted `color` with the given kind. The kind picks
-## a default weathering strength (tiles moss/fade most, metal least).
+
+
 static func create_roof_material(color: Color, kind: RoofKind = RoofKind.TILES) -> ShaderMaterial:
 	var key := [color, kind]
 	if _roof_materials.has(key):
@@ -123,20 +123,20 @@ static func create_roof_material(color: Color, kind: RoofKind = RoofKind.TILES) 
 	return mat
 
 
-## Apply procedural materials across a finished building subtree. Walks every
-## MeshInstance3D under `root` and assigns a wall or roof ShaderMaterial via
-## material_override, choosing by node name:
-##
-##   "Roof"                                  → roof shader (roof_kind)
-##   "Walls" / "Gables" / "*Walls" (skillion,
-##      sawtooth) / anything else            → wall shader (wall_kind)
-##
-## Uses material_override so the geometry code (which bakes a flat StandardMaterial
-## as a fallback tint) stays untouched and the shared meshes are never mutated.
-## Colours are read from each mesh's existing material so the per-building /
-## per-roof tints resolved by OSMBuildingBuilder carry straight through.
-##
-## Returns the number of meshes reassigned (for tests / logging).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 static func apply_to_building(root: Node, wall_kind: WallKind, roof_kind: RoofKind) -> int:
 	var count := 0
 	for mi: MeshInstance3D in _mesh_instances(root):
@@ -149,10 +149,10 @@ static func apply_to_building(root: Node, wall_kind: WallKind, roof_kind: RoofKi
 	return count
 
 
-# --- Internals ---------------------------------------------------------------
 
-## The tint baked onto a mesh's first surface material (StandardMaterial3D from
-## the geometry builders). Falls back to white if none is present.
+
+
+
 static func _existing_color(mi: MeshInstance3D) -> Color:
 	var mat := mi.get_active_material(0)
 	if mat is StandardMaterial3D:

@@ -63,7 +63,7 @@ func blocked(p: Vector3, own_id: int) -> bool:
 	var q := Vector2(p.x, p.z)
 	for entry: Dictionary in _buildings.get(_cell(q), []):
 		var own: Dictionary = _by_id.get(own_id, {})
-		# A containing outline is replaced by its parts, not a neighbouring wall.
+		
 		if not own.is_empty() and own.part and not entry.part and entry.area >= own.area and Geometry2D.is_point_in_polygon(own.center, entry.polygon):
 			continue
 		if entry.id != own_id and p.y >= entry.base and p.y < entry.height and Geometry2D.is_point_in_polygon(q, entry.polygon):

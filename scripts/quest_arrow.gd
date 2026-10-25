@@ -1,9 +1,9 @@
 class_name QuestArrow
 extends Node3D
 
-## Minimal in-world objective indicator. It is parented to the player vehicle,
-## so it inherits the vehicle's position and heading while this script only
-## updates the horizontal direction to the active quest target.
+
+
+
 
 @export var delivery_manager_path: NodePath
 
@@ -46,7 +46,7 @@ func _build_visual() -> void:
 	head_mesh.height = 0.48
 	head_mesh.radial_segments = 16
 	head.mesh = head_mesh
-	# CylinderMesh points along local +Y; rotate it to point along local -Z.
+	
 	head.rotation.x = -PI * 0.5
 	head.position.z = -ARROW_LENGTH - 0.24
 	head.material_override = material
@@ -68,6 +68,6 @@ func _process(_delta: float) -> void:
 	if not visible:
 		return
 	position.y = ARROW_HEIGHT
-	# look_at aligns local -Z with the target, matching the arrow geometry above.
+	
 	look_at(global_position + offset, Vector3.UP)
 

@@ -1,35 +1,35 @@
 class_name OSMInfrastructureBuilder
 extends RefCounted
 
-## Builds elevated structural geometry from OSM ways that sit *above* the ground
-## rather than draping onto it: overhead power lines (power=line/minor_line/cable)
-## and sign/signal gantries (man_made=gantry). Unlike the terrain ribbons in
-## OSMWayBuilder these features are raised structures, so they share tube/beam
-## geometry (PolygonUtils.add_tube_segment) instead of ribbon math.
 
-# ─── Power lines ─────────────────────────────────────────────────────────────
+
+
+
+
+
+
 
 const POWERLINE_COLORS := {
-	"line": Color(0.1, 0.1, 0.12),         # high-voltage transmission
-	"minor_line": Color(0.15, 0.15, 0.17), # distribution
+	"line": Color(0.1, 0.1, 0.12),         
+	"minor_line": Color(0.15, 0.15, 0.17), 
 	"cable": Color(0.12, 0.12, 0.14),
 }
 const POWERLINE_DEFAULT_COLOR := Color(0.12, 0.12, 0.14)
-# Cable hangs at these heights (meters) above the ground at each pylon/pole.
+
 const POWERLINE_HEIGHTS := {
-	"line": 18.0,        # transmission towers are tall
-	"minor_line": 8.0,   # wooden distribution poles
+	"line": 18.0,        
+	"minor_line": 8.0,   
 	"cable": 8.0,
 }
 const POWERLINE_DEFAULT_HEIGHT := 10.0
-const POWERLINE_SAG := 0.08          # mid-span droop as a fraction of span length
-const POWERLINE_RADIUS := 0.12       # visual thickness of the cable
-const POWERLINE_SUBDIVS := 6         # catenary samples per span
+const POWERLINE_SAG := 0.08          
+const POWERLINE_RADIUS := 0.12       
+const POWERLINE_SUBDIVS := 6         
 
-## Builds drooping cable geometry strung between the nodes of a power=line /
-## power=minor_line way (the supporting towers/poles are placed separately as
-## node assets). Each span hangs as a simple parabolic catenary at the line's
-## nominal height above the terrain. Returns null for degenerate ways.
+
+
+
+
 func build_power_line(way: OSMParser.OSMWay, osm_data: OSMParser.OSMData) -> MeshInstance3D:
 	var points := PolygonUtils.way_to_points(way.node_ids, osm_data.nodes)
 	if points.size() < 2:
@@ -54,9 +54,9 @@ func build_power_line(way: OSMParser.OSMWay, osm_data: OSMParser.OSMData) -> Mes
 	mesh_instance.mesh = st.commit()
 	return mesh_instance
 
-## Emit a thin sagging tube approximating a single cable span between two
-## supports. The cable starts and ends at `height` above each support's terrain
-## elevation and droops by POWERLINE_SAG * span in the middle.
+
+
+
 func _emit_catenary_span(st: SurfaceTool, a: Vector3, b: Vector3, height: float) -> void:
 	var span := Vector3(b.x - a.x, 0.0, b.z - a.z).length()
 	var sag := span * POWERLINE_SAG
@@ -66,23 +66,23 @@ func _emit_catenary_span(st: SurfaceTool, a: Vector3, b: Vector3, height: float)
 		var x := lerpf(a.x, b.x, t)
 		var z := lerpf(a.z, b.z, t)
 		var ground := lerpf(a.y, b.y, t)
-		# Parabolic droop: 0 at the ends, -sag at mid-span.
+		
 		var droop := -sag * (4.0 * t * (1.0 - t))
 		samples.append(Vector3(x, ground + height + droop, z))
 	for s: int in range(samples.size() - 1):
 		PolygonUtils.add_tube_segment(st, samples[s], samples[s + 1], POWERLINE_RADIUS)
 
-# ─── Man-made gantries ───────────────────────────────────────────────────────
 
-const GANTRY_COLOR := Color(0.45, 0.45, 0.48)  # galvanised steel
-const GANTRY_CLEARANCE := 5.5                   # underside height above ground (m)
-const GANTRY_BEAM := 0.5                        # cross-beam thickness (m)
-const GANTRY_LEG := 0.4                         # support-leg thickness (m)
 
-## Builds a sign/signal gantry: a horizontal cross-beam strung between the way's
-## endpoints at road clearance height, plus a vertical support leg dropping to
-## the ground at each end. Intermediate nodes are spanned as straight beam
-## sections. Returns null for degenerate ways.
+const GANTRY_COLOR := Color(0.45, 0.45, 0.48)  
+const GANTRY_CLEARANCE := 5.5                   
+const GANTRY_BEAM := 0.5                        
+const GANTRY_LEG := 0.4                         
+
+
+
+
+
 func build_gantry(way: OSMParser.OSMWay, osm_data: OSMParser.OSMData) -> MeshInstance3D:
 	var points := PolygonUtils.way_to_points(way.node_ids, osm_data.nodes)
 	if points.size() < 2:
@@ -98,13 +98,13 @@ func build_gantry(way: OSMParser.OSMWay, osm_data: OSMParser.OSMData) -> MeshIns
 	mat.metallic = 0.5
 	st.set_material(mat)
 
-	# Horizontal beam following the way at clearance height.
+	
 	for i: int in range(points.size() - 1):
 		var a := points[i] + Vector3(0.0, GANTRY_CLEARANCE, 0.0)
 		var b := points[i + 1] + Vector3(0.0, GANTRY_CLEARANCE, 0.0)
 		PolygonUtils.add_tube_segment(st, a, b, GANTRY_BEAM * 0.5)
 
-	# Vertical support legs at the two ends.
+	
 	var p0 := points[0]
 	var p1 := points[points.size() - 1]
 	PolygonUtils.add_tube_segment(st,

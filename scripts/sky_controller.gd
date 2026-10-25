@@ -1,45 +1,45 @@
 class_name SkyController
 extends Node
 
-## Owns the look of the sky and lighting, and blends between a day and a night
-## preset on demand.
-##
-## This is the single source of truth for "what time is it?". It drives three
-## things that must stay in agreement for the scene to read correctly:
-##   1. the procedural sky shader (gradient, sun disk, cloud tint),
-##   2. the DirectionalLight3D that casts the world's shadows (the "sun"), and
-##   3. the environment's fog and ambient light.
-##
-## Keeping all of that here means the rest of the game only has to flip a single
-## boolean (or call toggle) — it never has to know which colours, angles or
-## energies make up "night". The blend is animated with a Tween so toggling in
-## the menu fades smoothly rather than snapping.
 
-## Emitted whenever the target time of day changes (start of a transition), so
-## UI can update its label/checkbox immediately without waiting for the fade.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 signal day_night_changed(is_day: bool)
 
-## A full description of the sky/light/fog at one instant. Day and night are two
-## of these; the controller lerps every field between them to get any blend.
+
+
 class SkyPreset:
 	var zenith_color: Color
 	var horizon_color: Color
 	var ground_color: Color
 	var sun_color: Color
-	var sun_energy: float          ## Sky-shader sun disk brightness.
+	var sun_energy: float          
 	var cloud_color: Color
 	var cloud_shadow_color: Color
 	var cloud_coverage: float
 	var cloud_opacity: float
-	var light_color: Color         ## DirectionalLight3D colour.
-	var light_energy: float        ## DirectionalLight3D energy (0 = no sun).
-	var sun_angle_deg: float       ## Sun elevation above the horizon, degrees.
+	var light_color: Color         
+	var light_energy: float        
+	var sun_angle_deg: float       
 	var ambient_color: Color
 	var ambient_energy: float
 	var fog_color: Color
 	var fog_density: float
 
-## Daytime look: bright warm sun high in the sky, soft white clouds, blue dome.
+
 const DAY := {
 	"zenith_color": Color(0.18, 0.40, 0.72),
 	"horizon_color": Color(0.66, 0.78, 0.90),
@@ -59,8 +59,8 @@ const DAY := {
 	"fog_density": 0.002,
 }
 
-## Nighttime look: dim cool "moon" low on the horizon, deep blue dome, clouds
-## reduced to faint grey wisps lit from below by city haze.
+
+
 const NIGHT := {
 	"zenith_color": Color(0.02, 0.03, 0.08),
 	"horizon_color": Color(0.06, 0.08, 0.16),
@@ -80,66 +80,66 @@ const NIGHT := {
 	"fog_density": 0.0035,
 }
 
-## Compass heading the sun/moon sits at (degrees). Purely cosmetic — keeps the
-## light coming from a consistent direction across both presets.
+
+
 const SUN_AZIMUTH_DEG := 135.0
 
-## Seconds for the day<->night crossfade when toggled.
+
 const TRANSITION_TIME := 1.5
 
-## Path to the WorldEnvironment whose Environment (sky/fog/ambient) we drive.
-## Exported as a NodePath (not a typed node) so the scene file can wire it
-## reliably; node-typed exports assigned a NodePath in a .tscn resolve to null.
+
+
+
 @export var world_environment_path: NodePath
-## Path to the world's key light (the sun/moon).
+
 @export var sun_light_path: NodePath
-## Whether the scene starts in daytime.
+
 @export var start_in_day: bool = true
 
-## Resolved from world_environment_path at _ready(); the resource we mutate.
+
 var environment: Environment
-## Resolved from sun_light_path at _ready().
+
 var sun_light: DirectionalLight3D
 
-## True when the *target* state is day (set at the moment of toggling, before the
-## fade finishes). Read this to know which way things are heading.
+
+
 var _is_day: bool = true
 var _tween: Tween
-## The live, interpolated state. We animate this struct's fields and re-apply it
-## every step so a mid-transition toggle reverses cleanly from where it is now.
+
+
 var _current := SkyPreset.new()
 var _sky_material: ShaderMaterial
 
 
 func _ready() -> void:
-	# Resolve the wired nodes from their paths, then pull the Environment
-	# resource off the WorldEnvironment node so we can mutate sky/fog/ambient.
+	
+	
 	var we := get_node_or_null(world_environment_path) as WorldEnvironment
 	if we != null:
 		environment = we.environment
 	sun_light = get_node_or_null(sun_light_path) as DirectionalLight3D
 
-	# Pull the sky shader material out of the environment so we can push uniform
-	# values into it. The scene wires a ShaderMaterial-backed Sky onto the env.
+	
+	
 	if environment != null and environment.sky != null:
 		var mat := environment.sky.sky_material
 		if mat is ShaderMaterial:
 			_sky_material = mat
 
-	# Snap (no fade) to the starting preset so frame one already looks right.
+	
 	_is_day = start_in_day
 	_copy_preset_into(_preset_dict(_is_day), _current)
 	_apply_current()
 
 
-## Flips between day and night, animating the transition. Returns the new target
-## state (true = day) so callers can update UI without tracking it themselves.
+
+
 func toggle_day_night() -> bool:
 	set_day(not _is_day)
 	return _is_day
 
 
-## Sets the target time of day explicitly. No-op if already heading there.
+
 func set_day(target_is_day: bool) -> void:
 	if target_is_day == _is_day and _tween == null:
 		return
@@ -148,20 +148,20 @@ func set_day(target_is_day: bool) -> void:
 	_start_transition(_preset_dict(_is_day))
 
 
-## True if the current *target* is daytime.
+
 func is_day() -> bool:
 	return _is_day
 
 
-# --- Internals -------------------------------------------------------------
+
 
 func _preset_dict(target_is_day: bool) -> Dictionary:
 	return DAY if target_is_day else NIGHT
 
 
-## Kicks off (or restarts) the crossfade toward the given preset. Because we
-## tween the fields of the live _current struct from their *current* values, a
-## toggle partway through an existing fade smoothly reverses instead of jumping.
+
+
+
 func _start_transition(target: Dictionary) -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
@@ -171,8 +171,8 @@ func _start_transition(target: Dictionary) -> void:
 
 	_tween = create_tween()
 	_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	# Drive a single 0->1 progress value and lerp every field from the snapshot
-	# at the start of the fade to the goal. method_callback re-applies each step.
+	
+	
 	var from := SkyPreset.new()
 	_copy_struct(_current, from)
 	_tween.tween_method(
@@ -200,13 +200,13 @@ func _blend_step(weight: float, from: SkyPreset, to: SkyPreset) -> void:
 	_apply_current()
 
 
-## Pushes the live state onto the sky shader, the sun light and the environment.
+
 func _apply_current() -> void:
 	var night := inverse_lerp(float(DAY["light_energy"]), float(NIGHT["light_energy"]), _current.light_energy)
 	RenderingServer.global_shader_parameter_set("building_night", clampf(night, 0.0, 1.0))
-	# Sun/moon direction: convert elevation + azimuth into a unit vector, then
-	# orient the light to point along it. The sky shader needs the *travel*
-	# direction (toward the sky), which is the negation of "up toward the sun".
+	
+	
+	
 	var elev := deg_to_rad(_current.sun_angle_deg)
 	var azim := deg_to_rad(SUN_AZIMUTH_DEG)
 	var to_sun := Vector3(
@@ -218,13 +218,13 @@ func _apply_current() -> void:
 	if sun_light != null:
 		sun_light.light_color = _current.light_color
 		sun_light.light_energy = _current.light_energy
-		# Light shines opposite to the direction of the sun in the sky.
+		
 		sun_light.look_at_from_position(
 			sun_light.global_position,
 			sun_light.global_position - to_sun,
 			Vector3.UP
 		)
-		# Hide the shadow caster entirely once the moon is too dim to justify it.
+		
 		sun_light.shadow_enabled = _current.light_energy > 0.05
 
 	if _sky_material != null:
@@ -246,7 +246,7 @@ func _apply_current() -> void:
 		environment.fog_density = _current.fog_density
 
 
-## Reads a preset dictionary into a SkyPreset struct.
+
 func _copy_preset_into(d: Dictionary, out: SkyPreset) -> void:
 	out.zenith_color = d.zenith_color
 	out.horizon_color = d.horizon_color
@@ -266,7 +266,7 @@ func _copy_preset_into(d: Dictionary, out: SkyPreset) -> void:
 	out.fog_density = d.fog_density
 
 
-## Copies one struct's fields into another (snapshot for tween start state).
+
 func _copy_struct(src: SkyPreset, dst: SkyPreset) -> void:
 	dst.zenith_color = src.zenith_color
 	dst.horizon_color = src.horizon_color

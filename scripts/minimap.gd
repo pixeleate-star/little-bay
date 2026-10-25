@@ -1,17 +1,17 @@
 class_name Minimap
 extends Control
 
-## Draws a 2D top-down city minimap centered on the player car.
-## The car's forward direction always points upward on the minimap.
-##
-## The map is cheap to draw because almost none of it is done in script each
-## frame. Features are cached in world space, batched into spatial chunks, and
-## drawn under one transform that turns the map to the car's heading; the circle
-## is cut out on the GPU by a clipping layer instead of intersecting every
-## feature with it. (Projecting and clipping each point in GDScript used to cost
-## about a third of the frame.)
 
-@export var map_radius: float = 200.0  ## World-space radius shown on the minimap (meters)
+
+
+
+
+
+
+
+
+
+@export var map_radius: float = 200.0  
 @export var car_node_path: NodePath
 @export var tile_manager_node_path: NodePath
 
@@ -19,22 +19,22 @@ var _car: VehicleBody3D = null
 var _tile_manager: OSMTileManager = null
 var _data_ready: bool = false
 
-## Features near the car, batched into square chunks so a frame draws a few dozen
-## canvas commands rather than one per way. A chunk is
-## { bounds: Rect2, b_points, b_indices, b_colors (buildings, triangulated),
-##   water: { width: segment points }, minor / major: segment points (pairs) }.
+
+
+
+
 var _chunks: Array = []
 var _cache_center: Vector3 = Vector3.ZERO
 var _has_cache: bool = false
 
-# The cache is rebuilt on a worker thread: collecting a 600 m neighbourhood
-# cold-parses tiles, which takes hundreds of ms and froze the frame when it ran
-# in _process. The old cache keeps drawing until the new one is adopted.
+
+
+
 var _rebuild_task: int = -1
 var _rebuilt: Dictionary = {}
 
-# The chunks near enough to the car to matter, refreshed every VISIBLE_REFRESH
-# metres so a frame only walks the few it can show.
+
+
 const CHUNK_SIZE := 96.0
 const VISIBLE_MARGIN := 40.0
 const VISIBLE_REFRESH := 30.0
@@ -42,8 +42,8 @@ var _visible_chunks: Array = []
 var _visible_center := Vector2(INF, INF)
 var _expanded: bool = false
 
-# A course to follow (sprint): the line to drive and its gates, of which the
-# ones from _next_gate on are still to come. Empty in free drive.
+
+
 var _route := PackedVector3Array()
 var _route_xz := PackedVector2Array()
 var _route_gates := PackedVector3Array()
@@ -51,13 +51,13 @@ var _next_gate: int = 0
 var _objective := Vector3.ZERO
 var _has_objective := false
 
-# Layers, built in _ready. They draw behind this control's own drawing (rim,
-# car, north arrow), in order: backdrop, then the map inside a circular mask.
+
+
 var _backdrop: Layer
 var _map_mask: Layer
 var _map_content: Layer
 
-# Colors
+
 const BG_COLOR := Color(0.055, 0.06, 0.055, 0.97)
 const ROAD_COLOR := Color("415d99")
 const MAJOR_ROAD_COLOR := Color("009b88")
@@ -75,7 +75,7 @@ const FINISH_COLOR := Color("eee8dc")
 const MAJOR_HIGHWAYS := ["motorway", "trunk", "primary", "secondary", "tertiary",
 	"motorway_link", "trunk_link", "primary_link"]
 
-# Minimap line widths per waterway type (wider features draw thicker).
+
 const WATERWAY_WIDTHS := {
 	"river": 3.0,
 	"canal": 2.5,
@@ -86,8 +86,8 @@ const WATERWAY_WIDTHS := {
 const WATERWAY_DEFAULT_WIDTH := 1.5
 
 
-## A full-size child control that hands its drawing to a callable, so the layers
-## can share the minimap's data and helpers.
+
+
 class Layer extends Control:
 	var painter: Callable
 
@@ -122,7 +122,7 @@ func _on_resized() -> void:
 	_map_mask.queue_redraw()
 
 
-## Show a course on the map: the line to drive and its gates in order.
+
 func set_route(points: PackedVector3Array, gates: PackedVector3Array) -> void:
 	_route = points
 	_route_xz = _to_xz(points)
@@ -130,7 +130,7 @@ func set_route(points: PackedVector3Array, gates: PackedVector3Array) -> void:
 	_next_gate = 0
 
 
-## Gates before `index` have been passed and are no longer drawn.
+
 func set_next_gate(index: int) -> void:
 	_next_gate = index
 
@@ -163,7 +163,7 @@ func _resolve_nodes() -> void:
 	if tile_manager_node_path and _tile_manager == null:
 		_tile_manager = get_node_or_null(tile_manager_node_path) as OSMTileManager
 		if _tile_manager:
-			# Pull readiness if data is already available, else wait for the signal.
+			
 			_data_ready = _tile_manager.is_data_ready()
 			if not _data_ready and not _tile_manager.data_loaded.is_connected(_on_data_loaded):
 				_tile_manager.data_loaded.connect(_on_data_loaded)
@@ -171,7 +171,7 @@ func _resolve_nodes() -> void:
 
 func _on_data_loaded(_osm_data: OSMParser.OSMData) -> void:
 	_data_ready = true
-	_has_cache = false  # force a rebuild on the next frame
+	_has_cache = false  
 
 
 func _process(_delta: float) -> void:
@@ -217,17 +217,17 @@ func _refresh_visible(car_xz: Vector2) -> void:
 		func(chunk: Dictionary) -> bool: return (chunk["bounds"] as Rect2).grow(reach).has_point(car_xz))
 
 
-## Runs on a worker thread; hands its result over through _rebuilt.
+
 func _rebuild_cache(center: Vector3) -> void:
 	if _tile_manager == null:
 		_rebuilt = {}
 		return
 
-	# Pull ways near the car from the same tile source the 3D world streams from,
-	# so the minimap stays consistent with what's rendered (and, on the disk
-	# streaming path, the whole country is never iterated). The 3.0x radius keeps
-	# a margin so features don't pop in at the minimap edge.
-	var chunks := {}  # Vector2i -> chunk
+	
+	
+	
+	
+	var chunks := {}  
 	var cache_radius := map_radius * 3.0
 	for entry: Dictionary in _tile_manager.collect_ways_near(center, cache_radius):
 		var way: OSMParser.OSMWay = entry["way"]
@@ -249,8 +249,8 @@ func _rebuild_cache(center: Vector3) -> void:
 				chunk["water"][width] = PackedVector2Array()
 			_append_segments(chunk["water"][width], flat)
 		elif way.tags.has("building"):
-			# A rigid motion keeps a polygon's triangulation valid, so it is done
-			# once here instead of every frame the building is on the map.
+			
+			
 			var ring := flat
 			if ring.size() > 3 and ring[0] == ring[ring.size() - 1]:
 				ring = ring.slice(0, ring.size() - 1)
@@ -301,9 +301,9 @@ static func _new_chunk(bounds: Rect2) -> Dictionary:
 	}
 
 
-## Adds a triangulated polygon to a chunk's batched buildings. The arrays are
-## taken as parameters because packed arrays are only shared by reference that
-## way; appending to one pulled out of a dictionary would change a copy.
+
+
+
 static func _append_polygon(points: PackedVector2Array, indices: PackedInt32Array,
 		ring: PackedVector2Array, ring_indices: PackedInt32Array) -> void:
 	var offset := points.size()
@@ -312,8 +312,8 @@ static func _append_polygon(points: PackedVector2Array, indices: PackedInt32Arra
 	points.append_array(ring)
 
 
-## Appends a polyline as separate segments (point pairs), the form draw_multiline
-## takes, so a whole chunk's roads go out in one call.
+
+
 static func _append_segments(out: PackedVector2Array, points: PackedVector2Array) -> void:
 	for i: int in range(points.size() - 1):
 		out.append(points[i])
@@ -335,9 +335,9 @@ static func _bounds_of(points: PackedVector2Array) -> Rect2:
 	return bounds
 
 
-## Maps world (x, z) to minimap pixels around the control's centre: the same
-## projection as _world_to_minimap, as a transform so a whole layer can be drawn
-## under it.
+
+
+
 func _view_transform(car_pos: Vector3, car_angle: float, scale_factor: float, center: Vector2) -> Transform2D:
 	var sin_a := sin(car_angle)
 	var cos_a := cos(car_angle)
@@ -354,7 +354,7 @@ func _paint_backdrop(layer: Control) -> void:
 	layer.draw_arc(center, radius * 0.5, 0, TAU, 64, Color(0.32, 0.38, 0.39, 0.25), 1, true)
 
 
-## Only its alpha matters: the content layer is clipped to this circle.
+
 func _paint_mask(layer: Control) -> void:
 	layer.draw_circle(layer.size / 2.0, minf(layer.size.x, layer.size.y) / 2.0, Color.WHITE)
 
@@ -369,7 +369,7 @@ func _paint_content(layer: Control) -> void:
 	var car_xz := Vector2(car_pos.x, car_pos.z)
 	layer.draw_set_transform_matrix(_view_transform(car_pos, car_angle, scale_factor, size / 2.0))
 
-	# Widths are in world units under this transform, so divide the scale back out.
+	
 	var px := 1.0 / scale_factor
 	var canvas := layer.get_canvas_item()
 	var reach := map_radius
@@ -404,13 +404,13 @@ func _draw() -> void:
 
 	var car_pos := _car.global_position
 
-	# Car's forward direction in world space.
-	# The car drives along its local +Z axis (car_controller.gd line 78).
+	
+	
 	var car_forward := _car.global_transform.basis.z
-	# atan2(x, z) gives the angle from +Z towards +X.
+	
 	var car_angle := atan2(car_forward.x, car_forward.z)
 
-	# Set draw origin to center of the control
+	
 	draw_set_transform(center_pos)
 
 	_draw_route_gates(car_pos, car_angle, scale_factor, radius)
@@ -427,7 +427,7 @@ func _draw() -> void:
 			var base := objective_dir * (radius - 15.0)
 			draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), FINISH_COLOR)
 
-	# Car indicator: triangle pointing up
+	
 	draw_circle(Vector2.ZERO, 13, Color(0.835, 0.953, 0.42, 0.12))
 	var tri_size := 7.0
 	var tri := PackedVector2Array([
@@ -437,24 +437,24 @@ func _draw() -> void:
 	])
 	draw_colored_polygon(tri, CAR_COLOR)
 
-	# Border ring
+	
 	draw_arc(Vector2.ZERO, radius - 1.0, 0, TAU, 64, BORDER_COLOR, 1.0, true)
 	for i in range(36):
 		var direction := Vector2.from_angle(TAU * float(i) / 36.0)
 		var length := 7.0 if i % 3 == 0 else 3.0
 		draw_line(direction * (radius - length), direction * (radius - 2), BORDER_COLOR, 1, true)
 
-	# North indicator: red arrow pointing toward true north, drawn near the
-	# rim. The minimap rotates with the car, so north spins with the heading.
-	# See _draw_north_arrow() / _world_to_minimap() for the direction math.
+	
+	
+	
 	_draw_north_arrow(car_angle, radius)
 
 	draw_set_transform(Vector2.ZERO)
 
 
-## The gates still to come and, when the next gate is beyond the map's edge, a
-## marker on the rim pointing at it. (The course line itself is part of the
-## clipped map content.)
+
+
+
 func _draw_route_gates(car_pos: Vector3, car_angle: float, scale_factor: float, radius: float) -> void:
 	if _route.is_empty():
 		return
@@ -480,27 +480,27 @@ func _draw_route_gates(car_pos: Vector3, car_angle: float, scale_factor: float, 
 		draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), ROUTE_COLOR)
 
 
-## Returns the on-screen unit vector that points toward true north for a given
-## car heading. Derived by mapping a world point due north of the car
-## (dx=0, dz=-1) through _world_to_minimap():
-##   sx = -(0*cos - (-1)*sin) = -sin(car_angle)
-##   sy = -(0*sin + (-1)*cos) =  cos(car_angle)
-## Kept as a pure static helper so the direction math can be unit-tested.
+
+
+
+
+
+
 static func north_screen_direction(car_angle: float) -> Vector2:
 	return Vector2(-sin(car_angle), cos(car_angle))
 
 
-## Draws a red arrow near the rim pointing toward true north.
-## Assumes draw_set_transform() has already placed the origin at the minimap
-## center. Direction comes from north_screen_direction().
+
+
+
 func _draw_north_arrow(car_angle: float, radius: float) -> void:
-	# Unit vector on screen pointing toward north.
+	
 	var north_dir := north_screen_direction(car_angle)
-	# Perpendicular, used to fan out the arrowhead base.
+	
 	var side_dir := Vector2(-north_dir.y, north_dir.x)
 
-	# The arrow tip pokes past the rim; the base sits inside it. The arrow is
-	# drawn unclipped (unlike the map geometry) so it can spill over the border.
+	
+	
 	var tip_dist := radius + 6.6
 	var arrow_len := 14.52
 	var half_width := 7.26
@@ -512,7 +512,7 @@ func _draw_north_arrow(car_angle: float, radius: float) -> void:
 
 	var arrow := PackedVector2Array([tip, left, right])
 	draw_colored_polygon(arrow, NORTH_COLOR)
-	# White outline around the triangle (close the loop back to the tip).
+	
 	var outline := PackedVector2Array([tip, left, right, tip])
 	draw_polyline(outline, NORTH_BORDER_COLOR, 1.5, true)
 
@@ -521,13 +521,13 @@ func _world_to_minimap(world_pos: Vector3, car_pos: Vector3, car_angle: float, s
 	var dx := world_pos.x - car_pos.x
 	var dz := world_pos.z - car_pos.z
 
-	# Project offset onto car's local axes:
-	#   car_forward in XZ = (sin(car_angle), cos(car_angle))  from basis.z
-	#   car_right in XZ   = (cos(car_angle), -sin(car_angle))
-	#
-	# Screen mapping:
-	#   screen X = -dot(offset, car_right)   (negated to match world handedness)
-	#   screen Y = -dot(offset, car_forward) (ahead = screen up = -Y)
+	
+	
+	
+	
+	
+	
+	
 
 	var sin_a := sin(car_angle)
 	var cos_a := cos(car_angle)

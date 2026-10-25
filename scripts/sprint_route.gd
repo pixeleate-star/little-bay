@@ -1,31 +1,31 @@
 class_name SprintRoute
 extends RefCounted
 
-## A point-to-point course through the real road graph, from where the car
-## stands to a destination across town, with checkpoints along the way.
-##
-## Planning is a Dijkstra search over the traffic road graph (junction nodes
-## joined by road segments, one-way streets only forwards). Of the junctions a
-## suitable driving distance away, the one farthest from the start in a straight
-## line becomes the finish, so the course crosses town rather than circling the
-## block. Planning is deterministic: the same map and start always give the same
-## course, which is what makes a best time on it meaningful.
+
+
+
+
+
+
+
+
+
 
 const TrafficRoadNetworkScript := preload("res://scripts/traffic/traffic_road_network.gd")
 
-## The driven line, start to finish, in world space.
+
 var points := PackedVector3Array()
-## Gate positions along `points`, in driving order; the last is the finish.
+
 var checkpoints := PackedVector3Array()
-## Driving distance (m) from the start to each checkpoint.
+
 var checkpoint_distances := PackedFloat32Array()
 var length: float = 0.0
-## Stable identity of the course, for saving best times.
+
 var id: String = ""
 
 
-## Plan a course from `start`, initially driving along `heading`. Returns null
-## when there is no road under the start or nowhere far enough to go.
+
+
 static func plan(net: TrafficRoadNetworkScript, start: Vector3, heading: Vector3,
 		min_length: float = 700.0, max_length: float = 1300.0,
 		checkpoint_spacing: float = 150.0) -> SprintRoute:
@@ -36,7 +36,7 @@ static func plan(net: TrafficRoadNetworkScript, start: Vector3, heading: Vector3
 			return null
 		start_road = hit["road"]
 
-	# Leave the start road in the direction the car faces (one-ways: forwards).
+	
 	var cut := _project(start_road.points, start)
 	var tangent: Vector3 = start_road.points[cut["index"] + 1] - start_road.points[cut["index"]]
 	var forwards := start_road.one_way or tangent.dot(heading) >= 0.0
@@ -59,8 +59,8 @@ static func plan(net: TrafficRoadNetworkScript, start: Vector3, heading: Vector3
 	for node: int in dist:
 		var d: float = dist[node]
 		var crow := _flat_distance(node_pos[node], start)
-		# In the window, score by straight-line distance; outside it, only as a
-		# fallback (strongly penalised) when nothing fits the window.
+		
+		
 		var score := crow if d >= min_length and d <= max_length else d - 100000.0
 		if score > target_score or (score == target_score and node < target):
 			target = node
@@ -84,8 +84,8 @@ static func plan(net: TrafficRoadNetworkScript, start: Vector3, heading: Vector3
 	return route
 
 
-## Driving distance from the start to a world position's closest point on the
-## course, used to tell how far along the course the car is.
+
+
 func distance_along(pos: Vector3) -> float:
 	var cut := _project(points, pos)
 	var along := 0.0
@@ -103,7 +103,7 @@ func _place_checkpoints(spacing: float) -> void:
 		var seg := _flat_distance(points[i], points[i + 1])
 		if seg < 0.001:
 			continue
-		# Leave room before the finish so the last two gates aren't stacked.
+		
 		while next_at <= travelled + seg and next_at <= length - spacing * 0.5:
 			checkpoints.append(points[i].lerp(points[i + 1], (next_at - travelled) / seg))
 			checkpoint_distances.append(next_at)
@@ -113,9 +113,9 @@ func _place_checkpoints(spacing: float) -> void:
 	checkpoint_distances.append(length)
 
 
-## Shortest driving distances from `source` (reached after `base` metres) to
-## every reachable junction. Returns {dist, prev, pos}: prev maps a node to the
-## [road, reversed] step that reached it, pos to its world position.
+
+
+
 static func _dijkstra(net: TrafficRoadNetworkScript, source: int, base: float,
 		excluded_segment: int) -> Dictionary:
 	var dist := {source: base}
@@ -134,7 +134,7 @@ static func _dijkstra(net: TrafficRoadNetworkScript, source: int, base: float,
 			continue
 		done[node] = true
 		for road: TrafficRoadNetworkScript.Road in net.roads_at_node(node):
-			# No U-turn back down the road the car starts on.
+			
 			if road.segment_id == excluded_segment:
 				continue
 			var steps: Array = []
@@ -164,7 +164,7 @@ static func _path_to(prev: Dictionary, target: int) -> Array:
 	return path
 
 
-## Closest point on a polyline to `pos` in the ground plane: {index, position}.
+
 static func _project(pts: PackedVector3Array, pos: Vector3) -> Dictionary:
 	var target := Vector2(pos.x, pos.z)
 	var best := {"index": 0, "position": pts[0]}

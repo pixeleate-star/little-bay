@@ -1,7 +1,7 @@
 extends CanvasLayer
 
-## End-of-run card: the score, whether it is a new best, how the run went, and
-## where to go next. Shown over the paused world.
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 
@@ -31,9 +31,9 @@ func _ready() -> void:
 	main_menu_button.pressed.connect(main_menu_pressed.emit)
 
 
-## Show the card. `card` holds: eyebrow, headline ("TIME'S UP."), caption and
-## value (the result, e.g. "KUDOS" / "12,345"), is_new_best, best (text shown
-## when it isn't a new best), and stats: an array of [title, value] pairs.
+
+
+
 func present(card: Dictionary) -> void:
 	_eyebrow.text = card.get("eyebrow", "")
 	_headline.text = card.get("headline", "")

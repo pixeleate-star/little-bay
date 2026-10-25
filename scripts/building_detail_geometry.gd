@@ -8,11 +8,11 @@ static func surface() -> SurfaceTool:
 	return st
 
 
-## Faces a box can leave out when a neighbour (the wall it sits on, a bar it
-## overlaps) already hides them. Trim is built in the thousands, and every
-## hidden face is triangles drawn for nothing in the depth, colour and shadow passes.
-const SKIP_BACK := 1  ## the -w face, against the wall
-const SKIP_ENDS := 2  ## the +/-v faces, buried in a crossing bar
+
+
+
+const SKIP_BACK := 1  
+const SKIP_ENDS := 2  
 
 
 static func box(st: SurfaceTool, center: Vector3, size: Vector3, along: Vector3 = Vector3.RIGHT, skip: int = 0) -> void:
@@ -33,8 +33,8 @@ static func box(st: SurfaceTool, center: Vector3, size: Vector3, along: Vector3 
 			PolygonUtils.add_quad_facing(st, face - a - b, face + a - b, face + a + b, face - a + b, c.normalized() * sign_value)
 
 
-## Detail meshes are small trim, so by default they cast no shadow: the wall
-## behind already does, and each cascade would redraw every one of them.
+
+
 static func finish(st: SurfaceTool, name_str: String, material: Material, max_distance: float = 0.0, casts_shadow: bool = false) -> MeshInstance3D:
 	var arrays := st.commit_to_arrays()
 	if arrays[Mesh.ARRAY_VERTEX] == null or arrays[Mesh.ARRAY_VERTEX].is_empty():
@@ -57,7 +57,7 @@ static func finish(st: SurfaceTool, name_str: String, material: Material, max_di
 static var _matte_materials: Dictionary = {}
 
 
-## Shared per colour and roughness: see BuildingMaterialFactory for why.
+
 static func matte(color: Color, roughness: float = 0.8) -> StandardMaterial3D:
 	var key := [color, roughness]
 	if _matte_materials.has(key):

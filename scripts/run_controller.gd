@@ -1,16 +1,16 @@
 extends Node
 
-## Runs a timed mode in the world: holds the car at the line for the countdown,
-## keeps the clock, ends the run, saves the result and offers a retry from the
-## same start.
-##
-##   Kudos Attack       score as much as possible before the clock runs out.
-##   Checkpoint Sprint  drive a course planned through the real streets, gate by
-##                      gate, against the clock.
-##
-## main.gd creates one for timed modes and forwards the car's kudos events. The
-## logic lives in RunSession, SprintRoute and CheckpointTracker; this node is
-## the glue between them, the car, the minimap and the overlays.
+
+
+
+
+
+
+
+
+
+
+
 
 const RunSessionScript := preload("res://scripts/run_session.gd")
 const ProfileStoreScript := preload("res://scripts/profile_store.gd")
@@ -22,21 +22,21 @@ const CheckpointTrackerScript := preload("res://scripts/checkpoint_tracker.gd")
 const CheckpointMarkersScript := preload("res://scripts/checkpoint_markers.gd")
 const TrafficRoadNetworkScript := preload("res://scripts/traffic/traffic_road_network.gd")
 
-## The player chose to keep driving without the clock (or no course could be
-## planned); main drops back to free drive and frees this node.
+
+
 signal free_drive_requested
 
 var mode: RunSessionScript.Mode = RunSessionScript.Mode.KUDOS_ATTACK
 var car: CarController
-## Sprint only: the road graph to plan the course on.
+
 var road_network: TrafficRoadNetworkScript
-## Optional: shows the sprint course.
+
 var minimap: Minimap
 var session := RunSessionScript.new()
-## Where records go. Tests point this at a scratch file before _ready.
+
 var profile_path: String = ProfileStoreScript.DEFAULT_PATH
 
-## The planned sprint course, or null.
+
 var route: SprintRouteScript = null
 
 var _hud: RunHudScript
@@ -48,8 +48,8 @@ var _start_forward: Vector3
 
 
 func _ready() -> void:
-	# Ticks only while the tree runs, but must keep handling the results card
-	# while the world behind it is paused.
+	
+	
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if mode == RunSessionScript.Mode.SPRINT:
 		session.duration = 0.0
@@ -74,7 +74,7 @@ func _exit_tree() -> void:
 		minimap.clear_route()
 
 
-## Start the first run from wherever the car stands now.
+
 func begin() -> void:
 	_start_position = car.global_position
 	_start_forward = car.global_transform.basis.z
@@ -85,7 +85,7 @@ func begin() -> void:
 	_start_run()
 
 
-## True while the results card is up; the pause menu stays shut meanwhile.
+
 func is_showing_results() -> bool:
 	return _results.visible
 

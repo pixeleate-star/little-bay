@@ -1,35 +1,35 @@
 shader_type spatial;
 
-// Procedural asphalt for INTERSECTION CAPS.
-//
-// Visually identical to asphalt.gdshader — a junction must look like the roads
-// feeding it — but with one critical difference: this one WRITES DEPTH.
-//
-// Why the split. Road ribbons use depth_draw_never because they are kept as
-// overlapping coplanar strips and are resolved purely by render_priority draw
-// order. That works for road-on-road. It fails for the junction cap, because
-// render_priority only orders TRANSPARENT materials; opaque geometry is drawn
-// front-to-back by distance. A cap that writes no depth therefore has no way to
-// claim the pixels it covers, and whichever opaque surface happens to be drawn
-// after it — the terrain, or a landuse area polygon — paints straight over the
-// intersection. That is what left a grass-coloured hole where the junction
-// should be, even though the cap mesh was built, present in the scene, marked
-// visible, and sitting 24 mm above the ground.
-//
-// Writing depth makes the cap win that contest outright on geometry rather than
-// on draw-order luck. It is safe here precisely because caps do NOT overlap each
-// other: the solver gives every junction one owner (RoadNetworkContext), so
-// there is no coplanar cap-on-cap fight for depth to make worse.
-//
-// Kept as a separate file rather than a uniform because render_mode is a compile
-// time property of the shader and cannot be toggled per material.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 
-// Per-junction tint (from the dominant arm's highway class).
+
 uniform vec4 base_color : source_color = vec4(0.5, 0.5, 0.5, 1.0);
 
-// Global wetness 0..1, driven by WeatherController exactly as for the roads so
-// an intersection darkens and glosses with the street it belongs to.
+
+
 global uniform float wetness;
 
 uniform float grain_scale : hint_range(0.005, 0.1) = 0.02;
@@ -41,7 +41,7 @@ uniform float bump_strength : hint_range(0.0, 2.0) = 0.12;
 
 varying vec3 world_pos;
 
-// --- Value noise (identical to asphalt.gdshader so the surfaces match) ------
+
 
 float hash(vec2 p) {
 	uvec2 cell = uvec2(ivec2(p));
@@ -68,7 +68,7 @@ float fbm(vec2 p, float footprint) {
 	float sum = 0.0;
 	float amp = 0.5;
 	for (int i = 0; i < 4; i++) {
-		// Average away subpixel octaves rather than letting them shimmer.
+		
 		float visibility = 1.0 - smoothstep(0.25, 1.0, footprint);
 		float sample_value = 0.5;
 		if (visibility > 0.0) {
@@ -87,7 +87,7 @@ void vertex() {
 }
 
 void fragment() {
-	// Integer hashing keeps centimetre cells decorrelated without wrap seams.
+	
 	vec2 grain_uv = world_pos.xz / grain_scale;
 	vec2 patch_uv = world_pos.xz / patch_scale;
 

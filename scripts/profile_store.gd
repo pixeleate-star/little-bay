@@ -1,8 +1,8 @@
 class_name ProfileStore
 extends RefCounted
 
-## The player's saved records and lifetime stats, in a small ConfigFile under
-## user://. Missing or unreadable files just mean a fresh profile.
+
+
 
 const DEFAULT_PATH := "user://profile.cfg"
 
@@ -28,8 +28,8 @@ func total_distance_m() -> float:
 	return float(_cfg.get_value("stats", "distance_m", 0.0))
 
 
-## Record a finished run. Returns true when it beats the previous best; a first
-## run only counts as a best if it scored anything.
+
+
 func submit_score(mode_key: String, score: int) -> bool:
 	_cfg.set_value("runs", mode_key, runs(mode_key) + 1)
 	if score <= best_score(mode_key):
@@ -38,12 +38,12 @@ func submit_score(mode_key: String, score: int) -> bool:
 	return true
 
 
-## Best (lowest) time in seconds, or 0 when there is none yet.
+
 func best_time(key: String) -> float:
 	return float(_cfg.get_value("best_time", key, 0.0))
 
 
-## Record a finished timed run. Returns true when it is faster than the best.
+
 func submit_time(key: String, seconds: float) -> bool:
 	_cfg.set_value("runs", key, runs(key) + 1)
 	var best := best_time(key)

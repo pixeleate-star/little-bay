@@ -58,6 +58,6 @@ void fragment() {
 	ALBEDO = clamp(color, vec3(0.0), vec3(1.0));
 	ROUGHNESS = clamp(rough + joint * 0.1 + grime * 0.2, 0.0, 1.0);
 	SPECULAR = 0.35;
-	// Godot supplies the tangent frame in view space, like fragment NORMAL.
+	
 	NORMAL = normalize(NORMAL - TANGENT * bump.x - BINORMAL * bump.y);
 }

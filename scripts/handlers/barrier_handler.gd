@@ -1,7 +1,7 @@
 class_name BarrierHandler
 extends OSMWayHandler
 
-## barrier=* ways → linear barrier mesh (OSMAssetPlacer.place_way_asset).
+
 
 func handler_name() -> String:
 	return "barrier"

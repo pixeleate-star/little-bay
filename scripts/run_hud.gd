@@ -1,13 +1,13 @@
 extends CanvasLayer
 
-## The timed run's overlay: the clock at the top of the screen, a progress line
-## under it, split times, and the big "3, 2, 1, GO!" in the middle. Display
-## only; the run controller feeds it.
+
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 const RunSessionScript := preload("res://scripts/run_session.gd")
 
-## Under this many seconds left the clock turns red and pulses.
+
 const WARNING_SECONDS := 10.0
 const WARNING_COLOR := Color("ff806b")
 
@@ -36,7 +36,7 @@ func set_clock_visible(clock_visible: bool) -> void:
 	_clock_panel.visible = clock_visible
 
 
-## Show the countdown number. Pops each time the number changes.
+
 func show_count(number: int) -> void:
 	if number == _shown_count or number <= 0:
 		return
@@ -54,7 +54,7 @@ func show_finish() -> void:
 	_pop("TIME!", WARNING_COLOR, 1.2)
 
 
-## Count-down clock (Kudos Attack): red and pulsing near the end.
+
 func set_time(seconds: float, delta: float = 0.0) -> void:
 	var warning := seconds <= WARNING_SECONDS and seconds > 0.0
 	set_clock_text(RunSessionScript.format_time(seconds), warning)
@@ -72,13 +72,13 @@ func set_clock_text(text: String, warning: bool = false) -> void:
 		"font_color", WARNING_COLOR if warning else InterfaceTheme.PAPER)
 
 
-## The small line under the clock, e.g. "CHECKPOINT 2/7  ·  240 m"; "" hides it.
+
 func set_detail(text: String) -> void:
 	_detail_label.text = text
 	_detail_label.visible = text != ""
 
 
-## Flash a split under the kudos popup, e.g. "CHECKPOINT 3/7   0:42.3".
+
 func show_split(text: String) -> void:
 	if _split_tween != null and _split_tween.is_valid():
 		_split_tween.kill()

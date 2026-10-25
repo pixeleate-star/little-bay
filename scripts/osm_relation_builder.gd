@@ -1,15 +1,15 @@
 class_name OSMRelationBuilder
 extends RefCounted
 
-## Builds 3D geometry from OSM relations (multipolygon buildings, etc.)
+
 
 var _building_builder: OSMBuildingBuilder = null
 
-## Terrain parameters set by the tile manager for terrain-draped area meshes.
+
 var height_provider: HeightProvider = null
 var terrain_grid_step: float = 0.0
-## Set per-tile before building relations to clip large polygons to tile bounds.
-## Array[float] [min_x, max_x, min_z, max_z] or null.
+
+
 var tile_clip_rect: Variant = null
 
 
@@ -19,7 +19,7 @@ func _init() -> void:
 func build_relation(rel: OSMParser.OSMRelation, osm_data: OSMParser.OSMData) -> Node3D:
 	var tags := rel.tags
 
-	# Multipolygon relations
+	
 	if tags.get("type", "") == "multipolygon":
 		if tags.has("building"):
 			return _build_multipolygon_building(rel, osm_data)
@@ -29,13 +29,13 @@ func build_relation(rel: OSMParser.OSMRelation, osm_data: OSMParser.OSMData) -> 
 	elif tags.get("type", "") == "building":
 		return _build_building_relation(rel, osm_data)
 
-	# Route relations (could visualize bus routes, etc.) - skip for now
-	# Boundary relations - skip for now
+	
+	
 
 	return null
 
 func _build_multipolygon_building(rel: OSMParser.OSMRelation, osm_data: OSMParser.OSMData) -> Node3D:
-	# Collect outer ways and build buildings from them
+	
 	var root := Node3D.new()
 	root.name = "RelBuilding_%d" % rel.id
 	var has_children := false
@@ -56,7 +56,7 @@ func _build_multipolygon_building(rel: OSMParser.OSMRelation, osm_data: OSMParse
 		if points.size() < 3:
 			continue
 
-		# Merge relation tags with way tags (relation tags take priority)
+		
 		var merged_tags := way.tags.duplicate()
 		for k: String in rel.tags:
 			merged_tags[k] = rel.tags[k]
@@ -113,10 +113,10 @@ func _build_multipolygon_area(rel: OSMParser.OSMRelation, osm_data: OSMParser.OS
 				root.add_child(forest_node)
 				has_children = true
 		else:
-			# Same painter's-algorithm ground rank (priority) as scrub/forest and
-			# single-way areas: class order + smaller-patch tiebreak, depth-write
-			# disabled downstream so coplanar multipolygon parts don't z-fight the
-			# landcover they overlay.
+			
+			
+			
+			
 			var mesh_instance: MeshInstance3D
 			if use_terrain:
 				mesh_instance = PolygonUtils.build_terrain_draped_mesh(
@@ -135,12 +135,12 @@ func _build_multipolygon_area(rel: OSMParser.OSMRelation, osm_data: OSMParser.OS
 	return null
 
 func _build_building_relation(rel: OSMParser.OSMRelation, osm_data: OSMParser.OSMData) -> Node3D:
-	# type=building relation: render parts, skip outline
+	
 	var root := Node3D.new()
 	root.name = "RelBuilding_%d" % rel.id
 	var has_children := false
 
-	# Collect outline tags for defaults
+	
 	var outline_tags: Dictionary = {}
 	for member: Dictionary in rel.members:
 		if member["type"] != "way":
@@ -151,11 +151,11 @@ func _build_building_relation(rel: OSMParser.OSMRelation, osm_data: OSMParser.OS
 				outline_tags = osm_data.ways[way_id].tags.duplicate()
 			break
 
-	# Merge relation tags over outline tags for defaults
+	
 	for k: String in rel.tags:
 		outline_tags[k] = rel.tags[k]
 
-	# Build each part member
+	
 	for member: Dictionary in rel.members:
 		if member["type"] != "way":
 			continue
@@ -172,7 +172,7 @@ func _build_building_relation(rel: OSMParser.OSMRelation, osm_data: OSMParser.OS
 		if points.size() < 3:
 			continue
 
-		# Part tags override outline/relation defaults
+		
 		var merged_tags := outline_tags.duplicate()
 		for k: String in way.tags:
 			merged_tags[k] = way.tags[k]

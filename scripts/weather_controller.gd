@@ -1,45 +1,45 @@
 class_name WeatherController
 extends Node
 
-## Owns the world's rain state, wetness and lightweight weather effects.
-##
-## Turning this on now creates visible falling rain around the player, adds rainy
-## haze and darkens the scene while the roads become wet. The particle emitter
-## follows the car so the rain remains visible during free driving without
-## simulating an unnecessarily huge world-wide storm.
-##
-## The mechanism is a single global shader uniform, `wetness` (0 = dry, 1 =
-## soaked), declared in project.godot's [shader_globals] and read by
-## asphalt.gdshader and terrain.gdshader. Setting one global value reaches every
-## road and ground tile at once — including ones that stream in later — without
-## the CPU ever touching an individual material. That is the whole reason for the
-## global-uniform approach over per-material tracking (roads spawn a fresh
-## ShaderMaterial each; chasing them all would be far more code and slower).
-##
-## Transitions are tweened so rain "rolls in" over a couple of seconds rather than
-## snapping. The value write is funnelled through a small sink (_apply_level) so
-## tests can capture the level without a live RenderingServer.
 
-## Name of the global shader uniform (must match [shader_globals] in
-## project.godot and the `global uniform float wetness;` in the shaders).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const GLOBAL_UNIFORM := &"wetness"
 
-## Seconds for a full dry<->wet transition. A touch slow so it reads as weather
-## changing, not a switch.
+
+
 const TRANSITION_TIME := 3.0
 
-## Wetness level when "wet". Kept just under 1.0 so the road kramp doesn't go to a
-## perfect mirror (which looks unnaturally glassy and exaggerates SSR artefacts).
+
+
 const WET_LEVEL := 0.9
 const DRY_LEVEL := 0.0
 
-## Whether the world starts wet. Frame-one value; toggled at runtime.
+
 @export var start_wet: bool = false
 
-## Target state: true once the world is meant to be wet (set the instant a
-## transition begins, before the tween finishes).
+
+
 var _wet: bool = false
-## Live 0..1 wetness, animated by the tween and pushed to the global uniform.
+
 var _level: float = 0.0
 var _tween: Tween
 var _rain_particles: GPUParticles3D
@@ -90,8 +90,8 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if _rain_particles != null and _rain_target != null:
-		# Keep the emitter centered over the car. Existing particles stay in world
-		# space, which creates a natural sheet of rain instead of a glued effect.
+		
+		
 		_rain_particles.global_position = _rain_target.global_position + Vector3(0.0, 14.0, 0.0)
 
 
@@ -142,7 +142,7 @@ func _apply_rain_atmosphere(level: float) -> void:
 	var rain_factor := clampf(level / WET_LEVEL, 0.0, 1.0)
 	if _world_environment != null and _world_environment.environment != null:
 		var env := _world_environment.environment
-		# Rainy daylight is moodier, but stays bright enough for city driving.
+		
 		env.ambient_light_energy = lerpf(_base_ambient_energy, _base_ambient_energy * 0.50, rain_factor)
 		env.fog_density = lerpf(_base_fog_density, maxf(_base_fog_density * 4.6, 0.008), rain_factor)
 		env.fog_light_color = _base_fog_color.lerp(Color(0.24, 0.28, 0.32), rain_factor * 0.9)
@@ -156,15 +156,15 @@ func _apply_rain_atmosphere(level: float) -> void:
 	_set_rain_visible(rain_factor > 0.02)
 
 
-## Flips between dry and wet, tweening the transition. Returns the new target
-## state (true = wet) so callers can update UI without tracking it.
+
+
 func toggle() -> bool:
 	set_wet(not _wet)
 	return _wet
 
 
-## Sets the target wetness explicitly. No-op if already in (or heading to) that
-## state and not mid-transition.
+
+
 func set_wet(wet: bool) -> void:
 	if wet == _wet and _tween == null:
 		return
@@ -177,22 +177,22 @@ func set_wet(wet: bool) -> void:
 	_tween.tween_method(_apply_level, _level, target, TRANSITION_TIME)
 
 
-## True when the world is wet (or turning wet).
+
 func is_wet() -> bool:
 	return _wet
 
 
-## The live wetness level (0..1). Exposed for tests / debugging.
+
 func get_level() -> float:
 	return _level
 
 
-# --- Internals -------------------------------------------------------------
 
-## Store the live level and push it to the global shader uniform. Overridable /
-## observable by tests (which check _level) without needing the RenderingServer;
-## the RenderingServer call is a no-op cost when the global isn't registered, so
-## it's safe to run headless too.
+
+
+
+
+
 func _apply_level(level: float) -> void:
 	_level = clampf(level, 0.0, 1.0)
 	RenderingServer.global_shader_parameter_set(GLOBAL_UNIFORM, _level)

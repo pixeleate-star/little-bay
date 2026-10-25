@@ -1,10 +1,10 @@
 class_name BuildingSurfaceUV
 extends RefCounted
 
-## Reading a committed mesh back (surface_get_arrays / get_faces) copies it out
-## of GPU memory and stalls the render device, which costs tens of ms per
-## building while streaming. So every building mesh remembers the arrays it was
-## built from; later stages read that copy instead.
+
+
+
+
 const CPU_SURFACES_META := &"cpu_surfaces"
 static var _fallback_material: StandardMaterial3D = null
 
@@ -19,7 +19,7 @@ static func _material_or_fallback(material: Material) -> Material:
 	return _fallback_material
 
 
-## Commits `st` into a mesh for `instance` and keeps the arrays it was built from.
+
 static func commit(st: SurfaceTool, instance: MeshInstance3D) -> ArrayMesh:
 	var mesh := st.commit()
 	if mesh == null or mesh.get_surface_count() == 0:
@@ -37,7 +37,7 @@ static func apply(root: Node3D, origin: Vector3, ridge: Vector3) -> void:
 			project(child, origin, ridge, child.name == "Roof")
 
 
-## The triangle corners of every surface of `instance`, three vertices per triangle.
+
 static func faces_of(instance: MeshInstance3D) -> PackedVector3Array:
 	if not instance.has_meta(CPU_SURFACES_META):
 		return instance.mesh.get_faces()

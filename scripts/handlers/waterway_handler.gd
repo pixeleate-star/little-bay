@@ -1,10 +1,10 @@
 class_name WaterwayHandler
 extends OSMWayHandler
 
-## Linear water features (river, stream, ...) → blue ribbon (OSMWayBuilder).
-##
-## Underground waterways (culverts/tunnels/negative layer) are intentionally
-## skipped so they do not paint blue across the surface.
+
+
+
+
 
 func handler_name() -> String:
 	return "waterway"

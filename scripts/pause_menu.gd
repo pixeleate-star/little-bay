@@ -4,8 +4,8 @@ const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 
 func _ready() -> void:
 	$CenterContainer.theme = InterfaceTheme.create()
-	# Pause screen uses the Ace Rider editorial palette, not the in-drive cyan
-	# dashboard palette.
+	
+	
 	var identity: VBoxContainer = $CenterContainer/Panel/Margin/Columns/Identity
 	var settings: VBoxContainer = $CenterContainer/Panel/Margin/Columns/Settings
 	for child in identity.get_children():
@@ -47,7 +47,7 @@ func _box(fill: Color, border: Color, radius: int) -> StyleBoxFlat:
 func _focus_resume() -> void:
 	if not visible:
 		return
-	# Layout can assign focus to the first toggle when the menu is first revealed.
+	
 	await get_tree().process_frame
 	if visible:
 		$CenterContainer/Panel/Margin/Columns/Settings/ResumeButton.grab_focus()

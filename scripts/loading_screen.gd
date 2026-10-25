@@ -1,29 +1,29 @@
 extends CanvasLayer
 
-## Covers the screen while a drive starts, and shows real progress through it:
-##
-##   1. Loading the world scene and its models on a background thread.
-##   2. Booting it. The tile source opens and traffic builds its road graph in
-##      the world's _ready; that blocks the main thread, so the stage label is
-##      drawn first and holds still meanwhile.
-##   3. Building the streets around the spawn and settling the car, reported by
-##      the world itself through its loading_progress signal.
-##
-## Then the world becomes the current scene and this fades out and frees itself.
+
+
+
+
+
+
+
+
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 const RunSessionScript := preload("res://scripts/run_session.gd")
 
-## Emitted once the world is built and the overlay has begun to lift.
+
 signal finished(world: Node)
 
-## The world scene to load. Must emit loading_progress(fraction, status) and
-## world_ready; tests point this at a lightweight stand-in.
+
+
 @export_file("*.tscn") var scene_path: String = "res://scenes/main.tscn"
-## Handed to the world as its game_mode before it enters the tree.
+
 var game_mode: RunSessionScript.Mode = RunSessionScript.Mode.FREE_DRIVE
 
-## How the overall bar is split between the three stages above.
+
 const _ASSETS_SHARE := 0.3
 const _BOOT_SHARE := 0.1
 const _FADE_TIME := 0.45
@@ -61,7 +61,7 @@ var _done: bool = false
 
 func _ready() -> void:
 	layer = 50
-	# The world below pauses with the tree; the overlay must not.
+	
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_tip_index = randi() % TIPS.size()
 	_build_ui()
@@ -71,7 +71,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	# Ease the bar toward the latest report; it never runs backwards.
+	
 	_shown_progress = move_toward(_shown_progress, _target_progress, delta * 1.5)
 	_shown_progress = maxf(_shown_progress, _target_progress - 0.25)
 	_bar.value = _shown_progress
@@ -85,7 +85,7 @@ func _process(delta: float) -> void:
 		_tip_label.text = TIPS[_tip_index]
 
 
-## Progress shown on the bar, 0..1. Exposed for tests.
+
 func get_progress() -> float:
 	return _target_progress
 
@@ -101,9 +101,9 @@ func _run() -> void:
 		return
 
 	_set_stage("Reading map data", _ASSETS_SHARE)
-	# The world's _ready blocks the main thread; make sure this label is on screen
-	# before it starts, or the player stares at the previous stage instead.
-	# Two frames: the first lays out the new text, the second has drawn it.
+	
+	
+	
 	await get_tree().process_frame
 	await get_tree().process_frame
 
@@ -158,7 +158,7 @@ func _set_stage(status: String, progress: float) -> void:
 	_target_progress = maxf(_target_progress, progress)
 
 
-## Where in the world we are, once the world has opened its map.
+
 func _show_location() -> void:
 	var tile_manager := _world.get_node_or_null("OSMTileManager")
 	if tile_manager == null or not tile_manager.has_method("get_osm_data"):
@@ -177,7 +177,7 @@ func _build_ui() -> void:
 	_root.name = "Root"
 	_root.theme = InterfaceTheme.create()
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Swallow clicks so nothing reaches the world underneath.
+	
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_root)
 

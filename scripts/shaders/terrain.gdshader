@@ -1,15 +1,15 @@
 shader_type spatial;
 
-// Clean, texture-free Jame Gam ground. Two palette greens form large, quiet
-// colour blocks instead of noisy grass detail, keeping the scene readable and
-// lightweight for a browser build.
+
+
+
 
 render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 
 uniform vec4 base_color : source_color = vec4(0.431, 0.631, 0.431, 1.0);
 uniform vec4 patch_color : source_color = vec4(0.0, 0.608, 0.533, 1.0);
 
-// Large patch scale (metres) and fine blade-grain scale (metres).
+
 uniform float patch_scale : hint_range(2.0, 60.0) = 14.0;
 uniform float grain_scale : hint_range(0.05, 2.0) = 0.4;
 
@@ -17,9 +17,9 @@ uniform float albedo_variation : hint_range(0.0, 0.8) = 0.16;
 uniform float roughness_base : hint_range(0.0, 1.0) = 0.95;
 uniform float bump_strength : hint_range(0.0, 2.0) = 0.5;
 
-// Global wetness 0..1, shared with the asphalt shader (set by WeatherController).
-// Wet ground darkens and gains a damp sheen, but far less mirror-like than a
-// road — grass and soil scatter, they don't pool into a reflective film.
+
+
+
 global uniform float wetness;
 
 varying vec3 world_pos;
@@ -60,8 +60,8 @@ void vertex() {
 }
 
 void fragment() {
-	// Large alternating blocks create a simple stylised ground pattern while
-	// using only the two supplied greens.
+	
+	
 	float block_x = floor(world_pos.x / 24.0);
 	float block_z = floor(world_pos.z / 24.0);
 	float alternate = mod(block_x + block_z, 2.0);

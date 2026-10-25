@@ -1,14 +1,14 @@
 class_name CheckpointTracker
 extends RefCounted
 
-## Which checkpoint of a course is next, and when the car passes through it.
-## Gates must be taken in order. A gate counts when the car's path since the
-## last update came within `radius` of it, so a fast car or a long frame can't
-## skip over one between two samples.
+
+
+
+
 
 var radius: float = 12.0
-## A move longer than this (m) between samples is a teleport (recovery), not
-## driving, and only the landing spot is checked.
+
+
 var max_sweep: float = 40.0
 var next_index: int = 0
 
@@ -27,7 +27,7 @@ func reset() -> void:
 	_has_last = false
 
 
-## Feed the car's position. Returns true when it just passed the next gate.
+
 func update(pos: Vector3) -> bool:
 	if is_complete():
 		return false

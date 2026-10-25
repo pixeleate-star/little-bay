@@ -1,6 +1,6 @@
 extends Control
 
-## Ace Rider front door: a custom editorial garage-style interface built in code.
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 const SceneFlowScript := preload("res://scripts/scene_flow.gd")

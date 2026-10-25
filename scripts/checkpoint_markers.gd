@@ -1,8 +1,8 @@
 extends Node3D
 
-## The course's gates in the world: a tall beam of light and a ring on the road
-## at the next gate, visible over the rooftops, and a fainter one at the gate
-## after it so the player can read where the course turns. The finish is white.
+
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 
@@ -15,7 +15,7 @@ var _next: MarkerSet
 var _after: MarkerSet
 
 
-## One gate's beam + ring, with its own material so the two can differ.
+
 class MarkerSet:
 	var root := Node3D.new()
 	var material := StandardMaterial3D.new()
@@ -63,7 +63,7 @@ func set_gates(gates: PackedVector3Array) -> void:
 	_refresh(0)
 
 
-## Show the gate at `index` as the target and the one after it faintly.
+
 func set_next(index: int) -> void:
 	_refresh(index)
 

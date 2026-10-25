@@ -1,8 +1,8 @@
 extends CanvasLayer
 
-## Ace Rider's custom in-drive interface. The legacy widgets remain in the scene
-## because the driving systems still reference them, but this script hides that
-## old layer and owns the actual player-facing dashboard.
+
+
+
 
 const InterfaceTheme := preload("res://scripts/interface_theme.gd")
 
@@ -111,9 +111,9 @@ func _build_dashboard() -> void:
 	speed_panel.size = Vector2(340, 112)
 	speed_panel.add_theme_stylebox_override("panel", _panel(Color("2d272f"), Color("415d99")))
 	root.add_child(speed_panel)
-	# The real instrument cluster remains the authoritative speedometer. This
-	# dashboard deliberately leaves that detailed dial visible instead of
-	# duplicating it with a second digital readout.
+	
+	
+	
 	speed_panel.visible = false
 	var speed_row := HBoxContainer.new()
 	speed_row.add_theme_constant_override("separation", 12)

@@ -1,15 +1,15 @@
 class_name BuildingHandler
 extends OSMWayHandler
 
-## building=* ways → extruded walls + roof (OSMBuildingBuilder).
-##
-## When a building:part footprint already covers this outline, the manager's
-## pre-pass records the way id in ctx.suppressed_building_ids and the 3D outline
-## is skipped here (the parts render the detailed massing instead).
-##
-## Note: building:part ways themselves are rendered by OSMTileManager in a
-## dedicated second pass, not through this handler, because they must bypass the
-## suppression test.
+
+
+
+
+
+
+
+
+
 
 func handler_name() -> String:
 	return "building"

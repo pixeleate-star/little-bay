@@ -1,34 +1,34 @@
 class_name PostProcessing
 extends Node
 
-## Owns the screen-space post-processing stack on the WorldEnvironment and lets
-## us switch individual effects on and off from code (no UI). This is the "make
-## it look like Forza" layer: glow/bloom, SSAO, SSIL, SSR and tonemap/colour
-## grading, all stacked on top of the existing sky + fog.
-##
-## Two design goals drive the shape of this file:
-##
-##   1. Per-effect toggles. Each effect is an exported bool so we can flip them
-##      in the scene/inspector (or from a test harness) and measure where the
-##      frame rate falls off. SSR and SSIL are the usual suspects, so being able
-##      to disable them independently — without touching the others — is the
-##      whole point. Flipping a toggle at runtime re-applies immediately.
-##
-##   2. Day/night awareness. Bloom and exposure want different values after dark:
-##      at night the emissive headlights, street lamps and lit windows should
-##      bloom harder against a darker frame, and the overall exposure lifts a
-##      touch so the scene doesn't crush to black. We listen to the same
-##      day_night signal the sky uses and re-apply on each transition, tweening
-##      the continuous values so it matches the sky's 1.5 s crossfade.
-##
-## The Environment resource is shared with SkyController (which owns fog +
-## ambient + the sky material). We only ever touch the post-processing fields
-## here, so the two controllers can drive the same Environment without fighting.
 
-## A resolved set of post-processing values for one instant in time. The two
-## presets (day/night) are instances of this; the live state is lerped between
-## them so a toggle mid-transition reverses smoothly. Only the *continuous*
-## values live here — the on/off booleans are authored toggles, not animated.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class PPSettings:
 	var glow_intensity: float
 	var glow_bloom: float
@@ -37,17 +37,17 @@ class PPSettings:
 	var brightness: float
 	var contrast: float
 	var saturation: float
-	## Depth-of-field far blur: everything beyond dof_far_distance starts to
-	## soften, reaching full blur (dof_far_amount) by dof_far_distance +
-	## dof_far_transition. Keeps the car and near road crisp while distant
-	## buildings melt into a cinematic haze.
+	
+	
+	
+	
 	var dof_far_distance: float
 	var dof_far_transition: float
 	var dof_far_amount: float
 
-## Daytime grade: neutral-to-slightly-punchy. Bloom is subtle — bright sky and
-## sunlit asphalt highlights bleed a little, but the frame stays clean. A gentle
-## contrast/saturation lift gives the warm, slightly graded Forza daylight look.
+
+
+
 const DAY := {
 	"glow_intensity": 0.8,
 	"glow_bloom": 0.05,
@@ -56,17 +56,17 @@ const DAY := {
 	"brightness": 1.0,
 	"contrast": 1.05,
 	"saturation": 1.12,
-	# Distant buildings past ~180 m soften over a 220 m band. Subtle by day so it
-	# reads as aerial depth, not a blurry frame.
+	
+	
 	"dof_far_distance": 180.0,
 	"dof_far_transition": 220.0,
 	"dof_far_amount": 0.10,
 }
 
-## Nighttime grade: bloom pushed hard and its HDR threshold dropped so the
-## emissive lights (headlights, street lamps, lit windows) blaze against the
-## dark frame. Exposure lifts slightly so shadows don't crush to pure black, and
-## saturation eases off the way real low-light footage desaturates.
+
+
+
+
 const NIGHT := {
 	"glow_intensity": 1.3,
 	"glow_bloom": 0.25,
@@ -75,92 +75,92 @@ const NIGHT := {
 	"brightness": 1.0,
 	"contrast": 1.1,
 	"saturation": 1.02,
-	# A touch stronger at night so distant lights bloom into soft bokeh rather
-	# than sharp pinpoints — the classic night-driving look.
+	
+	
 	"dof_far_distance": 150.0,
 	"dof_far_transition": 200.0,
 	"dof_far_amount": 0.14,
 }
 
-## Seconds for the day<->night post-processing crossfade. Matches
-## SkyController.TRANSITION_TIME so the grade and the sky move together.
+
+
 const TRANSITION_TIME := 1.5
 
-# --- Per-effect toggles ------------------------------------------------------
-# Flip any of these in the inspector or from code to isolate its FPS cost.
-# Changing one at runtime re-applies the whole stack on the next frame.
 
-## Master switch. When false the Environment is left in its authored state and
-## none of the effects below are touched (useful as an A/B baseline).
+
+
+
+
+
 @export var enabled: bool = true:
 	set(v):
 		enabled = v
 		_reapply()
 
-## Glow/bloom. Cheap and high-impact; the signature "glowy" racing-game look.
+
 @export var glow_enabled: bool = true:
 	set(v):
 		glow_enabled = v
 		_reapply()
 
-## Screen-space ambient occlusion — contact shadows in crevices and where
-## geometry meets the ground. Moderate cost.
+
+
 @export var ssao_enabled: bool = true:
 	set(v):
 		ssao_enabled = v
 		_reapply()
 
-## Screen-space indirect lighting — cheap bounce light / colour bleed. Can be
-## the first thing to disable if the GPU is struggling.
+
+
 @export var ssil_enabled: bool = true:
 	set(v):
 		ssil_enabled = v
 		_reapply()
 
-## Screen-space reflections — glossy road/car-paint/window reflections. The most
-## expensive effect here; expect this to be the FPS cliff on weaker GPUs.
+
+
 @export var ssr_enabled: bool = true:
 	set(v):
 		ssr_enabled = v
 		_reapply()
 
-## Tonemap + colour adjustment (exposure, contrast, saturation grade). Nearly
-## free and defines the overall "graded" mood.
+
+
 @export var adjustments_enabled: bool = true:
 	set(v):
 		adjustments_enabled = v
 		_reapply()
 
-## Depth-of-field far blur — softens distant geometry for a cinematic depth cue.
-## Moderate cost (a blur pass); disable to isolate its FPS impact.
+
+
 @export var dof_enabled: bool = true:
 	set(v):
 		dof_enabled = v
 		_reapply()
 
-# --- Wiring ------------------------------------------------------------------
 
-## Path to the WorldEnvironment we drive (same node SkyController uses).
+
+
 @export var world_environment_path: NodePath
-## Path to the SkyController so we can follow its day/night transitions. Optional
-## — without it we simply apply the day preset and never change.
+
+
 @export var sky_controller_path: NodePath
-## Path to the Camera3D that gets depth-of-field. DOF in Godot 4 is a camera
-## attribute, not an Environment setting, so we attach a CameraAttributesPractical
-## to this camera. Optional — without it DOF is simply skipped.
+
+
+
 @export var camera_path: NodePath
-## Whether we start on the daytime grade. Kept in sync with the sky by wiring
-## the signal below; this is just the frame-one value.
+
+
 @export var start_in_day: bool = true
 
 var environment: Environment
-## Camera attributes resource we own and drive DOF through (created in _ready if
-## a camera is wired). Kept so _reapply can restamp it on every toggle/blend.
+
+
 var _camera_attrs: CameraAttributesPractical
 var _sky: SkyController
 var _is_day: bool = true
 var _tween: Tween
-## Live, interpolated continuous settings (lerped between DAY and NIGHT).
+
 var _current := PPSettings.new()
 
 
@@ -169,8 +169,8 @@ func _ready() -> void:
 	if we != null:
 		environment = we.environment
 
-	# Attach a camera-attributes resource for DOF. Reuse the camera's existing
-	# practical attributes if it already has some; otherwise create one.
+	
+	
 	var cam := get_node_or_null(camera_path) as Camera3D
 	if cam != null:
 		if cam.attributes is CameraAttributesPractical:
@@ -181,21 +181,21 @@ func _ready() -> void:
 
 	_sky = get_node_or_null(sky_controller_path) as SkyController
 	if _sky != null:
-		# Follow whatever the sky says the time of day is, and track future
-		# transitions. Seed from the sky's current state so we agree on frame one.
+		
+		
 		_is_day = _sky.is_day()
 		_sky.day_night_changed.connect(_on_day_night_changed)
 	else:
 		_is_day = start_in_day
 
-	# Snap (no fade) to the starting grade so frame one already looks right.
+	
 	_copy_preset_into(_preset_dict(_is_day), _current)
 	_reapply()
 
 
-## Follows the sky's day/night transition: tween the continuous values over the
-## same duration so bloom/exposure move in lockstep with the sky crossfade. The
-## effect toggles are unaffected — only the day/night-varying values animate.
+
+
+
 func _on_day_night_changed(is_day: bool) -> void:
 	_is_day = is_day
 	_start_transition(_preset_dict(is_day))
@@ -232,10 +232,10 @@ func _blend_step(weight: float, from: PPSettings, to: PPSettings) -> void:
 	_reapply()
 
 
-# --- Application -------------------------------------------------------------
 
-## Re-applies the whole stack to the Environment from the current toggles + live
-## settings. Cheap enough to call any time a toggle flips or a blend steps.
+
+
+
 func _reapply() -> void:
 	if environment != null:
 		apply_to(environment, _current)
@@ -243,12 +243,12 @@ func _reapply() -> void:
 		apply_dof_to(_camera_attrs, _current)
 
 
-## Pure-ish writer: stamps the effect toggles and the given continuous settings
-## onto an Environment. Split out from _reapply (which supplies the live state)
-## so tests can drive it with a throwaway Environment and any settings they like.
-##
-## Honours the master `enabled` switch: when off, every effect is disabled and
-## the tonemap is reset to the neutral Godot default so the baseline is clean.
+
+
+
+
+
+
 func apply_to(env: Environment, s: PPSettings) -> void:
 	if not enabled:
 		env.glow_enabled = false
@@ -258,28 +258,28 @@ func apply_to(env: Environment, s: PPSettings) -> void:
 		env.adjustment_enabled = false
 		return
 
-	# Glow / bloom.
+	
 	env.glow_enabled = glow_enabled
 	if glow_enabled:
 		env.glow_intensity = s.glow_intensity
 		env.glow_bloom = s.glow_bloom
 		env.glow_hdr_threshold = s.glow_hdr_threshold
-		# Screen blend keeps highlights from blowing out to flat white the way
-		# additive does — closer to a physical bloom.
+		
+		
 		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 
-	# SSAO.
+	
 	env.ssao_enabled = ssao_enabled
 
-	# SSIL (screen-space indirect lighting).
+	
 	env.ssil_enabled = ssil_enabled
 
-	# SSR (screen-space reflections). Needs a sane roughness fade / step budget;
-	# the defaults are fine, we just switch it on.
+	
+	
 	env.ssr_enabled = ssr_enabled
 
-	# Tonemap + colour grade. ACES gives the punchy, filmic highlight rolloff
-	# that reads as "AAA"; exposure/contrast/saturation do the mood.
+	
+	
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = s.exposure
 	env.adjustment_enabled = adjustments_enabled
@@ -289,12 +289,12 @@ func apply_to(env: Environment, s: PPSettings) -> void:
 		env.adjustment_saturation = s.saturation
 
 
-## Stamp the depth-of-field settings onto a CameraAttributesPractical. DOF in
-## Godot 4 lives on the camera's attributes resource, not the Environment, so
-## this is applied separately to whatever camera attributes the controller holds.
-## Only the far side is used (near stays sharp so the car and immediate road are
-## always crisp). Split out and pure so tests can drive it with a throwaway
-## CameraAttributesPractical.
+
+
+
+
+
+
 func apply_dof_to(attrs: CameraAttributesPractical, s: PPSettings) -> void:
 	if not enabled or not dof_enabled:
 		attrs.dof_blur_far_enabled = false
@@ -303,11 +303,11 @@ func apply_dof_to(attrs: CameraAttributesPractical, s: PPSettings) -> void:
 	attrs.dof_blur_far_distance = s.dof_far_distance
 	attrs.dof_blur_far_transition = s.dof_far_transition
 	attrs.dof_blur_amount = s.dof_far_amount
-	# Never blur the near field — the car must always stay sharp.
+	
 	attrs.dof_blur_near_enabled = false
 
 
-# --- Preset plumbing ---------------------------------------------------------
+
 
 func _preset_dict(target_is_day: bool) -> Dictionary:
 	return DAY if target_is_day else NIGHT

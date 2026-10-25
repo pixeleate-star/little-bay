@@ -1,11 +1,11 @@
 class_name RailwayHandler
 extends OSMWayHandler
 
-## Railway track ways (rail, tram, light_rail, subway, narrow_gauge, ...) →
-## ballast bed + two rail strips (OSMWayBuilder).
-##
-## Abstract sub-features that are not a physical line (platforms, signals,
-## crossings carried on nodes) are excluded by the value whitelist.
+
+
+
+
+
 
 const _RAILWAY_LINE_VALUES := {
 	"rail": true, "light_rail": true, "subway": true, "tram": true,

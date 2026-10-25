@@ -1,8 +1,8 @@
 class_name DeliveryManager
 extends Node3D
 
-## Small, readable delivery loop for Little Rider. Everything here is procedural
-## so the game stays lightweight and does not depend on another asset pack.
+
+
 
 const JAM_DARK := Color("2d272f")
 const JAM_GREEN := Color("6ea16e")
@@ -78,10 +78,10 @@ func _build_jobs() -> void:
 	_show_current_job()
 
 func _destination_road_for(pickup: Vector3, roads: Array[TrafficRoadNetwork.Road], start_index: int, drop_fraction: float) -> TrafficRoadNetwork.Road:
-	# Keep the drop on the real road graph, but avoid the old adjacent-road
-	# selection that produced almost identical ~135 m deliveries. Prefer the
-	# first valid road at least MIN_DELIVERY_DISTANCE_M away, then fall back to
-	# the farthest available road if this map ever becomes too compact.
+	
+	
+	
+	
 	var farthest: TrafficRoadNetwork.Road = roads[start_index]
 	var farthest_distance := -1.0
 	for offset: int in roads.size():
@@ -95,9 +95,9 @@ func _destination_road_for(pickup: Vector3, roads: Array[TrafficRoadNetwork.Road
 			return candidate
 	return farthest
 
-## The active objective in world coordinates. The waypoint/arrow uses this
-## instead of duplicating quest selection logic, so marker and completion always
-## refer to the same target.
+
+
+
 func active_target() -> Variant:
 	if _complete or _jobs.is_empty() or _job_index >= _jobs.size():
 		return null
@@ -229,7 +229,7 @@ func _finish_delivery() -> void:
 	_completed_deliveries += 1
 	_job_index += 1
 	if _job_index >= _jobs.size():
-		# Keep the delivery loop alive; rank is based on the lifetime total.
+		
 		_build_jobs()
 		return
 	_show_current_job()

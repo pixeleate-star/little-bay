@@ -1,38 +1,38 @@
 class_name OSMBuildingBuilder
 extends RefCounted
 
-## Builds 3D building meshes from OSM ways and relations tagged with "building".
-## Supports roof:shape values: flat, gabled, hipped, pyramidal, skillion,
-## half-hipped, gambrel, mansard, round, dome, onion, saltbox, sawtooth.
-## Supports roof:direction (compass bearing 0-360) which takes priority over
-## roof:orientation for specifying ridge direction.
-##
-## building=roof is treated as an open structure (canopy / porch / petrol-station
-## roof): a roof held up by thin support posts with no enclosing walls, rather
-## than a solid block. See https://wiki.openstreetmap.org/wiki/Tag:building%3Droof
-## (building:part=roof remains a normal walled roof part of a larger building.)
 
-const DEFAULT_HEIGHT := 8.0       # meters if no height/levels tag
-const FLOOR_HEIGHT := 3.0         # meters per floor
+
+
+
+
+
+
+
+
+
+
+const DEFAULT_HEIGHT := 8.0       
+const FLOOR_HEIGHT := 3.0         
 const BUILDING_Y := 0.0
 const DEFAULT_ROOF_COLOR := Color("8f5676")
-const DEFAULT_ROOF_HEIGHT := 3.0  # meters for pitched roofs when not specified
-const ROOF_SUPPORT_RADIUS := 0.12 # meters; radius of support posts for building=roof
-const ROOF_SLAB_THICKNESS := 0.3  # meters; thickness of a flat building=roof slab
+const DEFAULT_ROOF_HEIGHT := 3.0  
+const ROOF_SUPPORT_RADIUS := 0.12 
+const ROOF_SLAB_THICKNESS := 0.3  
 
-## When true, every building gets a StaticBody3D collider so the car crashes into
-## it instead of driving through. We use a single extruded ConvexPolygonShape3D
-## per building (footprint × wall height) rather than a concave trimesh: convex
-## shapes are the cheapest static primitive for the physics broadphase/narrowphase
-## and — unlike create_trimesh_shape() — carry no per-tile "cook" cost, so adding
-## collision to hundreds of buildings per tile does not hitch the frame the way a
-## trimesh would. Concave (e.g. L-shaped) footprints get their concavity slightly
-## "filled in" by the convex hull, but a car at street level cannot tell.
-## Set false to fall back to the old visual-only behaviour.
+
+
+
+
+
+
+
+
+
 var enable_collision: bool = true
 
-## Buildings below this height (meters) are treated as too short to block the car
-## and get no collider — avoids spending physics on kerb-height map noise.
+
+
 const MIN_COLLIDER_HEIGHT := 1.0
 
 const BUILDING_COLORS := {
@@ -63,7 +63,7 @@ const MATERIAL_COLORS := {
 	"steel": Color(0.55, 0.55, 0.6),
 }
 
-# Roof shape aliases: map common misspellings / synonyms to canonical names
+
 const ROOF_SHAPE_ALIASES := {
 	"pitched": "gabled",
 	"lean_to": "skillion",
@@ -102,9 +102,9 @@ func build_building_from_polygon(points: PackedVector3Array, tags: Dictionary, i
 	return _build_building_mesh(points, tags, id, context)
 
 func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int, context: BuildingNeighborhood = null) -> Node3D:
-	# Capture footprint elevation, then flatten points to y=0 so all geometry is
-	# built in local space relative to BUILDING_Y. The root node is raised to the
-	# terrain height afterward (see below), keeping walls and roofs coplanar.
+	
+	
+	
 	var ground_y := _average_footprint_y(points)
 	for i: int in range(points.size()):
 		points[i] = Vector3(points[i].x, 0.0, points[i].z)
@@ -112,7 +112,7 @@ func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int,
 		points.append(points[0])
 	points = _simplify_footprint(points)
 
-	# Normalize winding to CCW so all wall/roof code can assume consistent vertex order
+	
 	points = PolygonUtils.normalize_to_ccw(points)
 	var style := BuildingStyleResolver.resolve(tags, points, id)
 	if tags.get("building", "") != "roof":
@@ -137,8 +137,8 @@ func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int,
 		if parsed != Color.TRANSPARENT:
 			wall_color = parsed
 	elif tags.has("colour"):
-		# Bare `colour` tag — used by some building parts in place of the
-		# namespaced `building:colour` key.
+		
+		
 		var parsed := _parse_color(tags["colour"].strip_edges().to_lower())
 		if parsed != Color.TRANSPARENT:
 			wall_color = parsed
@@ -154,26 +154,26 @@ func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int,
 	if tags.has("roof:direction"):
 		roof_direction = tags["roof:direction"].to_float()
 
-	# Procedural-PBR surface kinds, inferred once from the OSM material tags. The
-	# actual shader materials are stamped onto the finished meshes just before we
-	# return (see _apply_surface_materials), keeping the geometry code unchanged.
+	
+	
+	
 	var wall_kind := BuildingMaterialFactory.wall_kind_for(tags.get("building:material", ""))
 	var roof_kind := BuildingMaterialFactory.roof_kind_for(tags.get("roof:material", ""))
 
 	var root := Node3D.new()
 	root.name = "Building_%d" % id
 
-	# Lift the whole building onto the terrain. All wall/roof geometry below is
-	# built relative to BUILDING_Y (0); translating the rigid root by the footprint
-	# elevation places it on the DEM without re-deriving every roof vertex.
+	
+	
+	
 	root.position.y = ground_y
 
-	# building=roof is an open structure (canopy/porch): just a roof held up by
-	# thin supports, with no enclosing walls. See
-	# https://wiki.openstreetmap.org/wiki/Tag:building%3Droof
-	# (Note: building:part=roof is a real roof part of a larger building and is
-	#  handled via the normal wall+roof path below, so we key off the top-level
-	#  "building" tag specifically rather than the merged building_type.)
+	
+	
+	
+	
+	
+	
 	if tags.get("building", "") == "roof":
 		_build_open_roof(root, points, height, min_height, roof_height, roof_color, wall_color, roof_shape, roof_orientation, roof_direction)
 		BuildingSurfaceUV.apply(root, PolygonUtils.polygon_centroid(points), RoofGeometry.get_ridge_dir(points, roof_orientation, roof_direction))
@@ -182,32 +182,32 @@ func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int,
 			root.add_child(_create_building_label(tags["name"], points, height))
 		return root
 
-	# For non-flat roofs, the wall height is total height minus roof height minus min_height
+	
 	var wall_height := height - min_height
 	if roof_shape != "flat" and roof_shape != "":
 		wall_height = maxf(height - min_height - roof_height, 2.0)
 
-	# Build walls (raised by min_height when building is elevated)
+	
 	var wall_base := BUILDING_Y + min_height
 	var wall_mesh := _build_walls(points, wall_height, wall_color, wall_base)
 	if wall_mesh != null:
 		root.add_child(wall_mesh)
 
-	# Build roof based on shape (roof sits on top of the walls)
+	
 	var roof_nodes := RoofBuilder.build_roof_shape(points, min_height + wall_height, roof_height, roof_color, wall_color, roof_shape, roof_orientation, roof_direction)
 	for node: Node3D in roof_nodes:
 		root.add_child(node)
 
-	# Add a cheap extruded convex collider so the car crashes into the building
-	# instead of driving through it. Spans the full footprint from the wall base
-	# (min_height, for elevated parts) up to the total building height.
+	
+	
+	
 	var collider := _build_footprint_collider(points, height - min_height, BUILDING_Y + min_height)
 	if collider != null:
 		root.add_child(collider)
 
-	# Swap the geometry's flat fallback materials for the procedural-PBR wall/roof
-	# shaders (before the label, which carries no surface). Done here in one place
-	# so all roof families and the wall mesh get consistent treatment.
+	
+	
+	
 	var uv_origin := PolygonUtils.polygon_centroid(points)
 	uv_origin.y = wall_base
 	BuildingSurfaceUV.apply(root, uv_origin, RoofGeometry.get_ridge_dir(points, roof_orientation, roof_direction))
@@ -216,7 +216,7 @@ func _build_building_mesh(points: PackedVector3Array, tags: Dictionary, id: int,
 	if tags.get("building:part", "") != "roof":
 		BuildingRoofDetails.build(root, points, wall_base + wall_height, roof_shape, style, roof_color, id, context)
 
-	# Add floating label if building has a name tag
+	
 	if tags.has("name") and tags["name"] != "":
 		var label := _create_building_label(tags["name"], points, height)
 		root.add_child(label)
@@ -238,38 +238,38 @@ func _simplify_footprint(points: PackedVector3Array) -> PackedVector3Array:
 	return result
 
 
-## Stamp the procedural wall/roof ShaderMaterials onto every mesh under `root`.
-## Delegates the node-name → material routing to BuildingMaterialFactory; the
-## per-building/roof tints are read back off the flat fallback materials the
-## geometry builders baked, so colours resolved from tags carry through.
+
+
+
+
 func _apply_surface_materials(
 		root: Node3D,
 		wall_kind: BuildingMaterialFactory.WallKind,
 		roof_kind: BuildingMaterialFactory.RoofKind) -> void:
 	BuildingMaterialFactory.apply_to_building(root, wall_kind, roof_kind)
 
-## Build an open roof structure (building=roof): a roof held up by thin support
-## posts, with no enclosing walls. The roof underside ("ceiling") sits at
-## (height - roof_height) and the posts run from the ground up to that ceiling.
-## All geometry is built relative to BUILDING_Y; the caller's root carries the
-## terrain offset.
+
+
+
+
+
 func _build_open_roof(root: Node3D, points: PackedVector3Array, height: float,
 		min_height: float, roof_height: float, roof_color: Color, wall_color: Color,
 		roof_shape: String, roof_orientation: String, roof_direction: float) -> void:
-	# Effective roof thickness/height. A flat roof has no pitch, so give it a thin
-	# slab so it reads as a solid roof rather than a paper-thin plane.
+	
+	
 	var effective_roof_h := roof_height
 	if roof_shape == "flat" or roof_shape == "":
 		effective_roof_h = ROOF_SLAB_THICKNESS
 
-	# Ceiling is the underside of the roof; posts reach up to it.
+	
 	var ceiling_y := maxf(height - effective_roof_h, min_height + 0.5)
 
-	# Support posts at each footprint vertex (skip the duplicated closing vertex).
-	# An open canopy (building=roof) must NOT block the car with a full footprint
-	# collider — the whole point is that you can drive under it. Instead each thin
-	# support post gets its own small box collider, so the car can pass through the
-	# opening but still crashes into a post.
+	
+	
+	
+	
+	
 	var post_color := wall_color
 	for i: int in range(points.size() - 1):
 		var post := _build_support_post(points[i], BUILDING_Y, ceiling_y, post_color)
@@ -280,9 +280,9 @@ func _build_open_roof(root: Node3D, points: PackedVector3Array, height: float,
 				post.add_child(post_col)
 			root.add_child(post)
 
-	# Roof sits on top of the posts at the ceiling height.
+	
 	if roof_shape == "flat" or roof_shape == "":
-		# Solid slab: top face + bottom face + thin sides.
+		
 		var slab := _build_roof_slab(points, ceiling_y, effective_roof_h, roof_color)
 		if slab != null:
 			root.add_child(slab)
@@ -291,9 +291,9 @@ func _build_open_roof(root: Node3D, points: PackedVector3Array, height: float,
 		for node: Node3D in roof_nodes:
 			root.add_child(node)
 
-## Build a StaticBody3D box collider matching a single support post (square prism
-## of side 2*ROOF_SUPPORT_RADIUS) spanning base_y..top_y. Returns null when
-## collision is disabled or the post is degenerate. Cheap: one BoxShape3D.
+
+
+
 func _build_post_collider(xz: Vector3, base_y: float, top_y: float) -> StaticBody3D:
 	if not enable_collision:
 		return null
@@ -308,14 +308,14 @@ func _build_post_collider(xz: Vector3, base_y: float, top_y: float) -> StaticBod
 	var col := CollisionShape3D.new()
 	col.name = "CollisionShape"
 	col.shape = box
-	# Box is centred on its origin; place the body at the post centre in xz and at
-	# the vertical midpoint. The parent post mesh sits at the root's local origin,
-	# so these coordinates are local to the root too.
+	
+	
+	
 	body.position = Vector3(xz.x, base_y + h * 0.5, xz.z)
 	body.add_child(col)
 	return body
 
-## Build a single vertical support post (square prism) from base_y to top_y at xz.
+
 func _build_support_post(xz: Vector3, base_y: float, top_y: float, color: Color) -> MeshInstance3D:
 	if top_y <= base_y:
 		return null
@@ -323,13 +323,13 @@ func _build_support_post(xz: Vector3, base_y: float, top_y: float, color: Color)
 	var r := ROOF_SUPPORT_RADIUS
 	var cx := xz.x
 	var cz := xz.z
-	# Four corners of the square cross-section (CCW when viewed from above)
+	
 	var c0 := Vector3(cx - r, 0.0, cz - r)
 	var c1 := Vector3(cx + r, 0.0, cz - r)
 	var c2 := Vector3(cx + r, 0.0, cz + r)
 	var c3 := Vector3(cx - r, 0.0, cz + r)
 	var corners := [c0, c1, c2, c3]
-	# Side walls
+	
 	for i: int in range(4):
 		var a: Vector3 = corners[i]
 		var b: Vector3 = corners[(i + 1) % 4]
@@ -340,31 +340,31 @@ func _build_support_post(xz: Vector3, base_y: float, top_y: float, color: Color)
 		RoofGeometry.add_quad(st, bl, br, top_r, tl)
 	return RoofGeometry.make_mesh(st, "Support")
 
-## Build a flat roof as a solid slab with thickness (top, bottom, and side faces).
+
 func _build_roof_slab(points: PackedVector3Array, base_y: float, thickness: float, color: Color) -> MeshInstance3D:
 	var top_y := base_y + thickness
 	var st := RoofGeometry.new_st(color)
-	# Top face (CCW, upward normal) and bottom face (downward normal)
+	
 	var indices := PolygonUtils.triangulate_xz(points)
 	for i: int in range(0, indices.size(), 3):
 		var ia: int = indices[i]
 		var ib: int = indices[i + 1]
 		var ic: int = indices[i + 2]
-		# Top face
+		
 		RoofGeometry.add_tri(st,
 			Vector3(points[ia].x, top_y, points[ia].z),
 			Vector3(points[ib].x, top_y, points[ib].z),
 			Vector3(points[ic].x, top_y, points[ic].z))
-		# Bottom face (reversed winding so it faces down)
+		
 		RoofGeometry.add_tri(st,
 			Vector3(points[ia].x, base_y, points[ia].z),
 			Vector3(points[ic].x, base_y, points[ic].z),
 			Vector3(points[ib].x, base_y, points[ib].z))
-	# Side faces around the perimeter.
-	# Winding (bl, tl, top_r, br) makes the culling front face point OUTWARD for
-	# CCW-normalized footprints, matching _build_walls. The reversed order
-	# (bl, br, top_r, tl) faces inward and is backface-culled from outside —
-	# the slab edges would then only be visible from underneath the roof.
+	
+	
+	
+	
+	
 	for i: int in range(points.size() - 1):
 		var p0 := points[i]
 		var p1 := points[i + 1]
@@ -375,29 +375,29 @@ func _build_roof_slab(points: PackedVector3Array, base_y: float, thickness: floa
 		RoofGeometry.add_quad(st, bl, tl, top_r, br)
 	return RoofGeometry.make_mesh(st, "Roof")
 
-## Parse a height string value to meters. Handles:
-## - bare numbers (assumed meters): "12", "12.5"
-## - explicit meters: "12 m", "12m"
-## - feet: "40'", "40 ft", "40ft"
-## - feet and inches: "40'6\"", though this is rare
+
+
+
+
+
 func _parse_height(value: String) -> float:
 	var s := value.strip_edges()
 	if s.is_empty():
 		return 0.0
-	# Check for feet indicator
+	
 	if s.ends_with("'") or s.ends_with("ft"):
 		var num_str := s.replace("ft", "").replace("'", "").strip_edges()
 		var ft := num_str.to_float()
 		return ft * 0.3048
-	# Check for explicit meters suffix
+	
 	if s.ends_with("m"):
 		var num_str := s.left(s.length() - 1).strip_edges()
 		return num_str.to_float()
-	# Bare number (assumed meters)
+	
 	return s.to_float()
 
-## Average terrain elevation across a footprint's nodes. Used to seat the whole
-## building on the DEM. Returns 0.0 for a flat world (node.y all zero).
+
+
 func _average_footprint_y(points: PackedVector3Array) -> float:
 	if points.is_empty():
 		return 0.0
@@ -425,8 +425,8 @@ func _get_building_height(tags: Dictionary) -> float:
 	if tags.has("building:levels"):
 		var levels: int = tags["building:levels"].to_int()
 		if levels > 0:
-			# building:levels counts only facade floors (excluding roof levels).
-			# To get total height we must also add roof levels.
+			
+			
 			var roof_levels: int = 0
 			if tags.has("roof:levels"):
 				roof_levels = tags["roof:levels"].to_int()
@@ -452,7 +452,7 @@ func _get_roof_height(tags: Dictionary, roof_shape: String, points: PackedVector
 	if tags.has("roof:angle"):
 		var angle_deg: float = tags["roof:angle"].to_float()
 		if angle_deg > 0.0 and angle_deg < 90.0 and points.size() >= 3:
-			# Compute the building width perpendicular to the ridge
+			
 			var ridge_dir := PolygonUtils.polygon_longest_edge_dir(points)
 			if orientation == "across":
 				ridge_dir = Vector3(-ridge_dir.z, 0.0, ridge_dir.x)
@@ -516,26 +516,26 @@ func _create_building_label(text: String, points: PackedVector3Array, height: fl
 	label.modulate = Color.WHITE
 	label.outline_modulate = Color(0.1, 0.1, 0.1, 0.8)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	# Respect scene depth so labels are occluded by buildings/terrain in front
-	# of them instead of shining through. Disabling this draws on top of all geometry.
+	
+	
 	label.no_depth_test = false
 	var centroid := PolygonUtils.polygon_centroid(points)
 	label.position = Vector3(centroid.x, BUILDING_Y + height + 1.0, centroid.z)
 	return label
 
-## Build a single StaticBody3D whose collider is the building footprint extruded
-## from base_y up to base_y + height. Uses a ConvexPolygonShape3D built from the
-## 2N corner points (N bottom + N top) — no trimesh cook, so this is cheap enough
-## to run for every building without tanking the frame. Returns null when
-## collision is disabled, the footprint is degenerate, or the building is too
-## short to be worth colliding with.
+
+
+
+
+
+
 func _build_footprint_collider(points: PackedVector3Array, height: float, base_y: float = 0.0) -> StaticBody3D:
 	if not enable_collision:
 		return null
 	if height < MIN_COLLIDER_HEIGHT:
 		return null
-	# Drop the duplicated closing vertex if the ring is closed; a convex hull does
-	# not need it and duplicate points only bloat the shape.
+	
+	
 	var ring := points
 	if ring.size() > 1 and ring[0].distance_to(ring[ring.size() - 1]) < 0.01:
 		ring = ring.slice(0, ring.size() - 1)
@@ -549,8 +549,8 @@ func _build_footprint_collider(points: PackedVector3Array, height: float, base_y
 		hull_points.append(Vector3(p.x, top_y, p.z))
 
 	var shape := ConvexPolygonShape3D.new()
-	# set_points computes the convex hull of the given point cloud; the extruded
-	# prism above yields exactly the hull we want (footprint × height).
+	
+	
 	shape.points = hull_points
 
 	var body := StaticBody3D.new()
@@ -562,7 +562,7 @@ func _build_footprint_collider(points: PackedVector3Array, height: float, base_y
 	return body
 
 func _build_walls(points: PackedVector3Array, height: float, color: Color, base_y: float = 0.0) -> MeshInstance3D:
-	# Points are always CCW (normalized in _build_building_mesh)
+	
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
@@ -582,7 +582,7 @@ func _build_walls(points: PackedVector3Array, height: float, color: Color, base_
 		var wall_dir := (br - bl).normalized()
 		var normal := Vector3(wall_dir.z, 0.0, -wall_dir.x).normalized()
 
-		# CCW polygon: bl -> tr_v -> br, bl -> tl -> tr_v
+		
 		st.set_normal(normal)
 		st.add_vertex(bl)
 		st.set_normal(normal)

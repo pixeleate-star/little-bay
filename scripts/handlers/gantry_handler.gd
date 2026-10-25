@@ -1,11 +1,11 @@
 class_name GantryHandler
 extends OSMWayHandler
 
-## Sign/signal gantry spanning a road (man_made=gantry) → raised cross-beam on
-## support legs (OSMInfrastructureBuilder).
-##
-## Closed gantry rings (rare) are left to AreaHandler, so this is registered
-## before AreaHandler.
+
+
+
+
+
 
 func handler_name() -> String:
 	return "gantry"
