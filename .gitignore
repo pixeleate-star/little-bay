@@ -3,6 +3,7 @@
 *.tif
 *.osm.pbf
 /dist
+/little-rider-itch-web.zip
 /raw_sources
 
 # Documentation used as inspiration
