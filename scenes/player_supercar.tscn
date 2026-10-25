@@ -1,0 +1,143 @@
+[gd_scene load_steps=13 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Paintjob"]
+resource_name = "Paintjob"
+albedo_color = Color(0.02, 0.28, 0.75, 1)
+metallic = 0.86
+roughness = 0.22
+clearcoat_enabled = true
+clearcoat = 1.0
+clearcoat_roughness = 0.06
+
+[sub_resource type="StandardMaterial3D" id="Glass"]
+resource_name = "Glas"
+albedo_color = Color(0.015, 0.04, 0.08, 1)
+metallic = 0.55
+roughness = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Tire"]
+resource_name = "Tire"
+albedo_color = Color(0.008, 0.01, 0.014, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Chrome"]
+resource_name = "Chrome"
+albedo_color = Color(0.65, 0.72, 0.8, 1)
+metallic = 0.95
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="HeadLights"]
+resource_name = "Head Lights"
+albedo_color = Color(0.7, 0.9, 1, 1)
+emission_enabled = true
+emission = Color(0.15, 0.65, 1, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="StandardMaterial3D" id="RearLights"]
+resource_name = "Rear Lights"
+albedo_color = Color(0.8, 0.02, 0.015, 1)
+emission_enabled = true
+emission = Color(1, 0.01, 0.005, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BodyMesh"]
+material = SubResource("Paintjob")
+size = Vector3(1.82, 0.48, 4.05)
+
+[sub_resource type="BoxMesh" id="HoodMesh"]
+material = SubResource("Paintjob")
+size = Vector3(1.55, 0.22, 1.65)
+
+[sub_resource type="BoxMesh" id="CabinMesh"]
+material = SubResource("Glass")
+size = Vector3(1.42, 0.58, 1.55)
+
+[sub_resource type="CylinderMesh" id="WheelMesh"]
+material = SubResource("Tire")
+top_radius = 0.34
+bottom_radius = 0.34
+height = 0.22
+radial_segments = 20
+rings = 4
+
+[sub_resource type="BoxMesh" id="TrimMesh"]
+material = SubResource("Chrome")
+size = Vector3(0.12, 0.08, 1.65)
+
+[sub_resource type="BoxMesh" id="LightMesh"]
+material = SubResource("HeadLights")
+size = Vector3(0.36, 0.08, 0.08)
+
+[node name="CarMesh" type="Node3D"]
+
+[node name="Body_Paintjob" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.63, 0)
+mesh = SubResource("BodyMesh")
+
+[node name="Hood_Paintjob" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.9, 1.03)
+mesh = SubResource("HoodMesh")
+
+[node name="Cabin_Glas" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.14, -0.18)
+rotation_degrees = Vector3(-4, 0, 0)
+mesh = SubResource("CabinMesh")
+
+[node name="FrontSplitter" type="MeshInstance3D" parent="."]
+visible = false
+position = Vector3(0, 0.43, 2.04)
+mesh = SubResource("TrimMesh")
+
+[node name="LeftSideIntake" type="MeshInstance3D" parent="."]
+visible = false
+position = Vector3(0.91, 0.66, -0.28)
+rotation_degrees = Vector3(0, 90, 0)
+mesh = SubResource("TrimMesh")
+
+[node name="RightSideIntake" type="MeshInstance3D" parent="."]
+visible = false
+position = Vector3(-0.91, 0.66, -0.28)
+rotation_degrees = Vector3(0, 90, 0)
+mesh = SubResource("TrimMesh")
+
+[node name="LeftHeadlight" type="MeshInstance3D" parent="."]
+position = Vector3(0.52, 0.94, 1.84)
+rotation_degrees = Vector3(0, -8, 0)
+mesh = SubResource("LightMesh")
+
+[node name="RightHeadlight" type="MeshInstance3D" parent="."]
+position = Vector3(-0.52, 0.94, 1.84)
+rotation_degrees = Vector3(0, 8, 0)
+mesh = SubResource("LightMesh")
+
+[node name="Wheel_Front_Right" type="MeshInstance3D" parent="."]
+position = Vector3(0.9, 0.39, 1.28)
+rotation_degrees = Vector3(0, 0, 90)
+mesh = SubResource("WheelMesh")
+
+[node name="Wheel_Front_Left" type="MeshInstance3D" parent="."]
+position = Vector3(-0.9, 0.39, 1.28)
+rotation_degrees = Vector3(0, 0, 90)
+mesh = SubResource("WheelMesh")
+
+[node name="Wheel_Rear_Right" type="MeshInstance3D" parent="."]
+position = Vector3(0.9, 0.39, -1.28)
+rotation_degrees = Vector3(0, 0, 90)
+mesh = SubResource("WheelMesh")
+
+[node name="Wheel_Rear_Left" type="MeshInstance3D" parent="."]
+position = Vector3(-0.9, 0.39, -1.28)
+rotation_degrees = Vector3(0, 0, 90)
+mesh = SubResource("WheelMesh")
+
+[node name="RearLight_Left" type="MeshInstance3D" parent="."]
+position = Vector3(0.55, 0.86, -2.03)
+mesh = SubResource("LightMesh")
+material_override = SubResource("RearLights")
+
+[node name="RearLight_Right" type="MeshInstance3D" parent="."]
+position = Vector3(-0.55, 0.86, -2.03)
+mesh = SubResource("LightMesh")
+material_override = SubResource("RearLights")
+
+

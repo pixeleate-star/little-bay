@@ -1,0 +1,76 @@
+extends RefCounted
+
+const BODY := preload("res://assets/ui/fonts/BarlowCondensed-SemiBold.ttf")
+const DISPLAY := preload("res://assets/ui/fonts/BarlowCondensed-SemiBold.ttf")
+const INK := Color("2d272f")
+const PAPER := Color("6ea16e")
+const MUTED := Color("9d696a")
+const ACCENT := Color("009b88")
+
+static func panel(fill: Color, border: Color = Color("344448"), padding: float = 16.0) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = padding
+	style.content_margin_right = padding
+	style.content_margin_top = padding
+	style.content_margin_bottom = padding
+	return style
+
+## Turn a button into the big accent call to action (dark ink on lime), the
+## style of "BACK TO THE ROAD" in the pause menu.
+static func style_primary(button: Button, font_size: int = 26) -> void:
+	button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, 56)
+	button.add_theme_font_override("font", DISPLAY)
+	button.add_theme_font_size_override("font_size", font_size)
+	button.add_theme_stylebox_override("normal", panel(ACCENT, ACCENT, 12))
+	button.add_theme_stylebox_override("hover", panel(Color("735fb1"), ACCENT, 12))
+	button.add_theme_stylebox_override("pressed", panel(Color("415d99"), ACCENT, 12))
+	var ring := panel(Color(0, 0, 0, 0), PAPER, 0)
+	ring.set_border_width_all(2)
+	button.add_theme_stylebox_override("focus", ring)
+	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(state, INK)
+
+
+## A plain label in the interface palette; `display` picks the condensed face.
+static func label(text: String, size: int, color: Color = PAPER, display: bool = false) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", color)
+	if display:
+		l.add_theme_font_override("font", DISPLAY)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+static func create() -> Theme:
+	var theme := Theme.new()
+	theme.default_font = BODY
+	theme.default_font_size = 16
+	theme.set_color("font_color", "Label", PAPER)
+	theme.set_color("font_color", "Button", PAPER)
+	theme.set_color("font_hover_color", "Button", PAPER)
+	theme.set_color("font_pressed_color", "Button", ACCENT)
+	theme.set_stylebox("panel", "PanelContainer", panel(INK))
+	for type in ["Button", "CheckButton"]:
+		theme.set_stylebox("normal", type, panel(Color("2d272f"), Color("415d99"), 12))
+		theme.set_stylebox("hover", type, panel(Color("415d99"), Color("009b88"), 12))
+		theme.set_stylebox("pressed", type, panel(Color("8f5676"), ACCENT, 12))
+		var focus := panel(Color(0, 0, 0, 0), ACCENT, 0)
+		focus.set_border_width_all(2)
+		theme.set_stylebox("focus", type, focus)
+		theme.set_color("font_color", type, PAPER)
+		theme.set_color("font_hover_color", type, PAPER)
+		theme.set_color("font_pressed_color", type, PAPER)
+		theme.set_color("font_focus_color", type, PAPER)
+	for icon in ["checked", "checked_mirrored"]:
+		theme.set_icon(icon, "CheckButton", preload("res://assets/ui/toggle-on.svg"))
+	for icon in ["unchecked", "unchecked_mirrored"]:
+		theme.set_icon(icon, "CheckButton", preload("res://assets/ui/toggle-off.svg"))
+	theme.set_constant("h_separation", "CheckButton", 18)
+	theme.set_constant("separation", "VBoxContainer", 8)
+	return theme
